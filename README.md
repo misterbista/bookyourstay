@@ -1384,37 +1384,4 @@ For MVP, build these first:
 
 ---
 
-# 15. Recommended Design Decisions
 
-## Best design choices
-
-* PostgreSQL as primary DB
-* modular monolith first
-* separate inventory tables per resource type
-* event-driven payment confirmation
-* separate pricing engine
-* soft delete/audit logs for partner/admin changes
-* verified review model
-* configurable loyalty/referral rules in admin
-
----
-
-# 16. Final Recommendation on Schema Style
-
-For production, use:
-
-* **core normalized tables**
-* **separate availability tables**
-* **separate booking item tables per resource type**
-* **JSONB only for flexible metadata**, not core transactional data
-
-That gives you:
-
-* strong data integrity
-* better reporting
-* easier maintenance
-* easier scaling later
-
----
-
-I can next turn this into a more formal **IEEE-style SRS document**, or generate a **full ERD and PostgreSQL SQL script**.
