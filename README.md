@@ -1,1387 +1,575 @@
+# BookYourStay
 
+## Overview
 
-# 1. Product Vision
+BookYourStay is a booking platform for:
 
-Build a platform where users can:
+* hotels and resorts
+* staycations and daycations
+* event venues
+* activities
+* transport add-ons
+* service add-ons like decoration or catering
 
-* book **hotels, resorts, staycations, and daycations**
-* discover by **location, area, price, package, and activities**
-* add **pick-up/drop-off** by road or air
-* apply **discounts, referral rewards, and loyalty points**
-* book **event spaces** for office gatherings, weddings, birthdays, exhibitions, conferences, and product launches
-* request **decorations and add-on services**
-* pay online and track booking/payment status
-* leave **ratings, reviews, and comments**
+The goal is to let customers discover a property, select a bookable offering, add extras, pay online, and track the booking from confirmation to completion.
 
-This is basically a mix of:
+This document is written as an MVP product and API guide. It focuses on the features to build first, the main use cases, and the API endpoints needed to support them.
 
-* hotel marketplace
-* experience marketplace
-* event venue booking
-* transport add-on platform
-* promotion and loyalty engine
+## MVP Scope
 
----
+### Included
 
-# 2. High-Level Product Modules
-
-## 2.1 Customer Side
-
-* user registration and login
-* hotel/resort discovery
-* search and filter
-* staycation booking
-* daycation booking
-* package booking
-* activity booking
-* event venue booking
-* decoration and service add-ons
-* transport booking
-* payment
-* coupons / discounts
-* loyalty and referral
+* customer sign up and login
+* partner onboarding and approval
+* property listing and management
+* room, package, activity, event venue, and transport setup
+* search and filtering
+* booking and checkout
+* coupon support
+* dummy Stripe payment flow
+* booking status tracking
 * reviews and ratings
-* booking history
-* notifications
+* admin approval and moderation
 
-## 2.2 Hotel / Resort Partner Side
+### Deferred
 
-* partner onboarding
-* hotel profile management
-* room / package / event space management
-* pricing and availability management
-* transport service setup
-* decoration/service offering management
-* promotion management
-* booking management
-* refund/cancellation handling
-* review response
-* reporting/dashboard
+* loyalty points
+* referral rewards
+* corporate booking workflows
+* advanced analytics
+* dynamic pricing engine
+* real third-party transport integrations
 
-## 2.3 Admin Side
+## Users and Roles
 
-* approve partners
-* manage cities/areas/categories
-* manage commission rates
-* manage coupons and campaigns
-* manage referral and loyalty rules
-* dispute handling
-* moderation of reviews/comments
-* financial reconciliation
-* analytics and reporting
+### Customer
 
----
+* search and view properties
+* create bookings
+* add transport and service add-ons
+* pay online
+* cancel eligible bookings
+* review completed bookings
 
-# 3. Business Plan / System Plan
+### Partner
 
-# 3.1 Core Offerings
+* create and manage properties
+* manage inventory, pricing, and availability
+* manage bookings and cancellation requests
+* define activities, event spaces, transport, and add-ons
 
-## A. Accommodation
+### Admin
 
-* hotel rooms
-* resort villas
-* suites
-* cottages
+* approve partners and properties
+* manage categories, locations, and coupons
+* monitor bookings and payments
+* moderate reviews
+* resolve disputes
 
-## B. Staycation Offers
+## Core Booking Types
 
-* overnight packages
-* breakfast included
-* dinner included
-* pool access
-* spa package
-* romantic package
-* family package
-
-## C. Daycation Offers
-
-* day pool access
-* lunch buffet
-* spa access
-* day use room
-* team outing day pass
-
-## D. Event & Venue Booking
-
-* wedding halls
-* meeting rooms
-* board rooms
-* banquet halls
-* conference halls
-* exhibition spaces
-* product launch venues
-* outdoor lawns
-
-## E. Add-On Services
-
-* decoration packages
-* sound and lighting
-* DJ/music
-* projector/screen
-* catering
-* photography
-* flowers and balloons
-* stage setup
-* host/MC
-* security
-* event coordinator
-
-## F. Adventure Activities
-
-* zipline
-* rafting
-* paragliding
-* jungle safari
-* hiking
-* ATV ride
-* boating
-* cycling
-* bonfire
-* cultural show
-
-## G. Transport
-
-* airport pick-up/drop
-* helipad/air transport support
-* private car
-* bus/van
-* jeep transfer
-* shuttle services
-
----
-
-# 3.2 User Flow
-
-## Customer journey
-
-1. User opens app/web
-2. Searches by destination, date, event type, or property
-3. Applies filters:
-
-   * area/location
-   * price
-   * rating
-   * activities
-   * package type
-   * event type
-   * transport availability
-4. Views hotel/resort details
-5. Selects:
-
-   * room/package/daycation/event venue
-   * guests
-   * activities
-   * transport
-   * decoration/services
-6. Applies coupon/referral
-7. Pays
-8. Receives booking confirmation
-9. Uses service
-10. Gives rating/review
-11. Earns loyalty points
-
----
-
-# 3.3 Revenue Model
-
-* commission per booking
-* commission per event booking
-* commission on add-ons
-* premium listing for partners
-* ads/promoted placements
-* corporate subscription plan
-* service fee on payment
-* cancellation/rebooking fee share
-
----
-
-# 4. SRS (Software Requirements Specification)
-
-# 4.1 Introduction
-
-## 4.1.1 Purpose
-
-This system provides an online platform for customers to discover and book hotels, resorts, staycation offers, daycation offers, event venues, activities, transport, and event-related add-on services.
-
-## 4.1.2 Scope
-
-The system supports:
-
-* accommodation booking
-* daycation/staycation packages
-* event bookings
-* transport arrangements
-* loyalty/referral systems
-* coupon/discount management
-* payment integration
-* ratings/reviews/comments
-* partner and admin management
-
-## 4.1.3 Stakeholders
-
-* customers
-* hotel/resort partners
-* corporate users
-* event organizers
-* platform admins
-* payment gateway providers
-* transport providers
-* decorators/service vendors
-
----
-
-# 4.2 Functional Requirements
-
-## 4.2.1 User Management
-
-The system shall:
-
-* allow user sign-up/login via email, phone, OAuth
-* support password reset
-* support profile management
-* support saved preferences
-* support role-based access:
-
-  * customer
-  * partner
-  * admin
-  * corporate manager
-
-## 4.2.2 Property Management
-
-The system shall:
-
-* allow partners to create hotel/resort profiles
-* manage rooms, packages, amenities, policies, and images
-* define supported booking types:
-
-  * room booking
-  * staycation
-  * daycation
-  * event venue booking
-* define service area/location mapping
-* define pricing calendars and inventory
-
-## 4.2.3 Search and Filtering
-
-The system shall allow search by:
-
-* city
-* area
-* map location
-* hotel/resort name
-* property type
-* event type
-
-The system shall support filters:
-
-* area/location
-* price range
-* rating
-* amenities
-* package type
-* activity type
-* transport availability
-* event capacity
-* indoor/outdoor
-* family/couple/corporate friendly
-* discount available
-* loyalty eligible
-
-## 4.2.4 Booking
-
-The system shall support:
+The platform supports these bookable products:
 
 * room booking
-* staycation package booking
-* daycation package booking
+* staycation package
+* daycation package
 * activity booking
 * event venue booking
-* service add-on booking
-* transport booking
 
-The system shall:
+Optional add-ons:
 
-* validate availability
-* calculate price
-* calculate taxes and fees
-* apply discounts
-* reserve inventory
-* confirm booking after successful payment or approved payment mode
+* road transport
+* air transport inquiry
+* decoration package
+* catering
+* AV setup
+* photography
+* other partner-defined services
 
-## 4.2.5 Event Booking
+## Main Use Cases
 
-The system shall:
+### 1. Customer books a room or package
 
-* allow venue booking for:
+1. Customer searches by location and date.
+2. Customer filters by price, rating, amenities, and property type.
+3. Customer opens a property detail page.
+4. Customer selects a room, staycation, or daycation option.
+5. System checks availability and calculates price.
+6. Customer adds coupon and optional add-ons.
+7. Customer proceeds to payment.
+8. System creates a pending booking and pending payment.
+9. Dummy Stripe payment succeeds.
+10. Booking is confirmed and inventory is reserved.
 
-  * office gathering
-  * marriage
-  * birthday
-  * conference
-  * exhibition
-  * product launch
-* allow selection of capacity, date, slot, duration
-* allow add-ons like decoration, catering, AV setup
-* allow custom event requests
+### 2. Customer books an event venue
 
-## 4.2.6 Package Management
+1. Customer selects event type, guest count, date, and duration.
+2. System shows available venues and packages.
+3. Customer adds decoration, catering, and AV services.
+4. System calculates total price.
+5. Customer pays online.
+6. Booking is confirmed after successful payment.
 
-The system shall allow partners to define packages with:
+### 3. Customer adds transport
 
-* title
-* category
-* inclusions
-* exclusions
-* capacity
-* schedule
-* price
-* offer validity
-* blackout dates
+1. Customer selects transport during checkout.
+2. Customer chooses one-way or round trip.
+3. System prices the selected vehicle or route.
+4. Transport is attached to the booking as an add-on item.
 
-## 4.2.7 Activities Management
+### 4. Partner manages availability
 
-The system shall:
+1. Partner creates room types, packages, activities, or event spaces.
+2. Partner updates inventory, capacity, blackout dates, and price.
+3. Search results and booking availability reflect these updates.
 
-* allow listing activities per hotel/resort
-* manage activity schedule, price, capacity, and restrictions
-* support bundled and standalone activity booking
+### 5. Admin approves a partner
 
-## 4.2.8 Transport Management
+1. Partner registers and submits business details.
+2. Admin reviews the application.
+3. Admin approves or rejects the partner.
+4. Only approved partners can publish listings.
 
-The system shall support:
+## Dummy Stripe Payment
 
-* road transfer booking
-* air transfer inquiry/booking
-* airport pick-up/drop
-* one-way and round-trip
-* vehicle type selection
-* schedule and capacity
-* price per route or package
+The system will use Stripe in test mode only. This means:
 
-## 4.2.9 Promotions / Discounts
+* no real money is charged
+* all payments are simulated using Stripe test credentials
+* booking confirmation depends on successful test payment
 
-The system shall support:
+### Recommended MVP Approach
 
-* coupons
-* automatic discounts
-* seasonal promotions
-* first booking offers
-* corporate offers
-* referral rewards
-* loyalty redemption
+Use Stripe Payment Intents in test mode.
 
-## 4.2.10 Loyalty Program
+Flow:
 
-The system shall:
+1. Backend creates a booking in `pending_payment` state.
+2. Backend creates a Stripe test Payment Intent.
+3. Frontend confirms the payment using Stripe.js and test card data.
+4. Backend receives Stripe webhook event.
+5. Backend marks payment as `paid`.
+6. Backend marks booking as `confirmed`.
 
-* award points per eligible booking
-* allow redeeming points
-* support tier levels:
+### Payment States
 
-  * silver
-  * gold
-  * platinum
-* support expiry rules
+* `pending`
+* `requires_action`
+* `paid`
+* `failed`
+* `refunded`
+* `partially_refunded`
 
-## 4.2.11 Referral Program
+### Booking States
 
-The system shall:
+* `draft`
+* `pending_payment`
+* `confirmed`
+* `cancelled`
+* `completed`
+* `refund_pending`
+* `refunded`
 
-* generate referral codes/links
-* track invited users
-* apply referral benefits
-* prevent self-referral abuse
+### Stripe Webhooks to Handle
 
-## 4.2.12 Ratings, Reviews, Comments
+* `payment_intent.succeeded`
+* `payment_intent.payment_failed`
+* `charge.refunded`
 
-The system shall:
+### Important Rule
 
-* allow verified users to rate completed bookings
-* allow comments/reviews
-* allow partner response
-* allow moderation/reporting
+Do not mark a booking as confirmed only from the frontend response. Confirm it after the backend validates the Stripe webhook or verifies the Payment Intent status.
 
-## 4.2.13 Payment System
+## Functional Requirements
 
-The system shall support:
+### Authentication
 
-* online payment gateway
-* wallet/points redemption
-* partial advance payment
-* full payment
-* refund handling
-* payment status tracking
+* email and password sign up
+* login and logout
+* password reset
+* role-based access control
 
-## 4.2.14 Notifications
+### Discovery
 
-The system shall send:
+* search by city, area, date, property name, and booking type
+* filter by price, rating, amenities, capacity, and availability
+* sort by price, rating, and popularity
 
-* booking confirmation
-* cancellation/refund update
-* event reminder
-* pickup reminder
-* coupon/referral reward update
-* review request
+### Property Management
 
-## 4.2.15 Admin Controls
+* partner creates property profile
+* partner uploads images and amenities
+* partner defines room types, packages, event spaces, activities, and transport options
+* partner manages pricing and availability
 
-The system shall allow admins to:
+### Booking
 
-* manage categories and locations
-* approve or suspend partners
-* manage featured listings
-* manage disputes
-* manage promotions
-* view financial and operational reports
+* price calculation
+* coupon application
+* tax and fee calculation
+* inventory validation
+* booking creation
+* cancellation and refund tracking
 
----
+### Reviews
 
-# 4.3 Non-Functional Requirements
+* only completed bookings can be reviewed
+* review includes rating and comment
+* admin can hide abusive content
 
-## Performance
+## Suggested System Modules
 
-* search response under 2–3 seconds for standard queries
-* payment confirmation handled reliably
-* support concurrent bookings without inventory conflicts
+* Auth
+* Users
+* Partners
+* Properties
+* Inventory
+* Search
+* Pricing
+* Bookings
+* Payments
+* Reviews
+* Coupons
+* Notifications
+* Admin
 
-## Scalability
+## API Conventions
 
-* support multi-city and multi-country expansion
-* horizontally scalable booking and search services
+### Base Path
 
-## Security
+`/api/v1`
 
-* encrypted passwords
-* secure payment tokenization
-* RBAC authorization
-* audit logs
-* fraud checks for referrals and payment abuse
+### Auth
 
-## Availability
+Use bearer token authentication for protected endpoints.
 
-* target 99.9% uptime
-* resilient payment retry and webhook handling
+### Common Response Shape
 
-## Maintainability
+```json
+{
+  "success": true,
+  "message": "Request completed",
+  "data": {},
+  "meta": {}
+}
+```
 
-* modular service boundaries
-* API-first design
-* clean domain model
+### Common Error Shape
 
-## Usability
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": {
+    "field": ["error message"]
+  }
+}
+```
 
-* mobile-friendly UI
-* easy filter-based discovery
-* clear checkout flow
+## API Endpoints
 
----
+### Authentication
 
-# 4.4 User Roles
+* `POST /api/v1/auth/register` - register customer
+* `POST /api/v1/auth/login` - login user
+* `POST /api/v1/auth/logout` - logout user
+* `POST /api/v1/auth/forgot-password` - request password reset
+* `POST /api/v1/auth/reset-password` - reset password
+* `GET /api/v1/auth/me` - get current user profile
 
-## Customer
+### Customer Profile
 
-* browse, book, pay, review
+* `GET /api/v1/users/me` - get profile
+* `PATCH /api/v1/users/me` - update profile
+* `GET /api/v1/users/me/bookings` - list customer bookings
+* `GET /api/v1/users/me/payments` - list customer payments
+* `GET /api/v1/users/me/reviews` - list customer reviews
 
-## Partner
+### Partner Onboarding
 
-* manage inventory, offers, availability, bookings
+* `POST /api/v1/partners/apply` - submit partner application
+* `GET /api/v1/partners/me` - get partner profile
+* `PATCH /api/v1/partners/me` - update partner profile
+* `GET /api/v1/partners/me/status` - get approval status
 
-## Corporate User
+### Properties
 
-* manage team/outing/event bookings
+* `GET /api/v1/properties` - public property list
+* `GET /api/v1/properties/{propertyId}` - public property detail
+* `POST /api/v1/partner/properties` - create property
+* `GET /api/v1/partner/properties` - list partner properties
+* `GET /api/v1/partner/properties/{propertyId}` - get partner property detail
+* `PATCH /api/v1/partner/properties/{propertyId}` - update property
+* `DELETE /api/v1/partner/properties/{propertyId}` - archive property
 
-## Admin
+### Room Types
 
-* control system-wide operations
+* `POST /api/v1/partner/properties/{propertyId}/rooms` - create room type
+* `GET /api/v1/partner/properties/{propertyId}/rooms` - list room types
+* `PATCH /api/v1/partner/rooms/{roomId}` - update room type
+* `DELETE /api/v1/partner/rooms/{roomId}` - archive room type
 
----
+### Packages
 
-# 5. Suggested Architecture
+* `POST /api/v1/partner/properties/{propertyId}/packages` - create staycation or daycation package
+* `GET /api/v1/properties/{propertyId}/packages` - list public packages
+* `PATCH /api/v1/partner/packages/{packageId}` - update package
+* `DELETE /api/v1/partner/packages/{packageId}` - archive package
 
-Use a modular monolith first, then split to services when scale grows.
+### Activities
 
-## Modules
-
-* Identity & Access
-* Property Management
-* Inventory & Availability
-* Search & Discovery
-* Booking
-* Pricing & Offers
-* Event Management
-* Activity Management
-* Transport Management
-* Payment
-* Review & Rating
-* Loyalty & Referral
-* Notification
-* Reporting/Admin
-
-## Tech suggestion
-
-* frontend: Next.js / React
-* backend: .NET, Java, Node, or similar
-* database: PostgreSQL
-* cache: Redis
-* search: PostgreSQL FTS first, Elasticsearch/OpenSearch later
-* storage: S3-compatible object storage
-* queue/events: RabbitMQ / Kafka / outbox pattern
-
----
-
-# 6. Domain Model Overview
+* `POST /api/v1/partner/properties/{propertyId}/activities` - create activity
+* `GET /api/v1/properties/{propertyId}/activities` - list public activities
+* `PATCH /api/v1/partner/activities/{activityId}` - update activity
+* `DELETE /api/v1/partner/activities/{activityId}` - archive activity
+
+### Event Venues
+
+* `POST /api/v1/partner/properties/{propertyId}/venues` - create event venue
+* `GET /api/v1/properties/{propertyId}/venues` - list public event venues
+* `PATCH /api/v1/partner/venues/{venueId}` - update event venue
+* `DELETE /api/v1/partner/venues/{venueId}` - archive event venue
+
+### Transport and Add-Ons
+
+* `POST /api/v1/partner/properties/{propertyId}/transport-options` - create transport option
+* `GET /api/v1/properties/{propertyId}/transport-options` - list public transport options
+* `POST /api/v1/partner/properties/{propertyId}/addons` - create service add-on
+* `GET /api/v1/properties/{propertyId}/addons` - list public add-ons
+* `PATCH /api/v1/partner/transport-options/{transportId}` - update transport option
+* `PATCH /api/v1/partner/addons/{addonId}` - update service add-on
+
+### Availability and Pricing
+
+* `GET /api/v1/properties/{propertyId}/availability` - public availability check
+* `POST /api/v1/partner/inventory/bulk-update` - bulk inventory update
+* `POST /api/v1/partner/pricing/bulk-update` - bulk pricing update
+* `POST /api/v1/bookings/quote` - calculate booking price before creating booking
+
+### Search and Filters
+
+* `GET /api/v1/search/properties` - search properties
+* `GET /api/v1/search/suggestions` - search suggestions
+* `GET /api/v1/locations` - list cities and areas
+* `GET /api/v1/categories` - list booking categories
+
+### Coupons
+
+* `POST /api/v1/coupons/validate` - validate coupon code
+* `POST /api/v1/admin/coupons` - create coupon
+* `GET /api/v1/admin/coupons` - list coupons
+* `PATCH /api/v1/admin/coupons/{couponId}` - update coupon
+
+### Bookings
+
+* `POST /api/v1/bookings` - create booking
+* `GET /api/v1/bookings/{bookingId}` - get booking detail
+* `POST /api/v1/bookings/{bookingId}/cancel` - cancel booking
+* `GET /api/v1/partner/bookings` - partner booking list
+* `GET /api/v1/partner/bookings/{bookingId}` - partner booking detail
+* `PATCH /api/v1/partner/bookings/{bookingId}` - update booking status or notes
+
+### Payments
+
+* `POST /api/v1/payments/create-intent` - create Stripe test Payment Intent
+* `POST /api/v1/payments/{bookingId}/confirm` - confirm payment status from backend
+* `GET /api/v1/payments/{paymentId}` - get payment detail
+* `POST /api/v1/payments/{paymentId}/refund` - request refund
+* `POST /api/v1/webhooks/stripe` - Stripe webhook receiver
+
+### Reviews
+
+* `POST /api/v1/bookings/{bookingId}/reviews` - create review
+* `GET /api/v1/properties/{propertyId}/reviews` - list public reviews
+* `PATCH /api/v1/reviews/{reviewId}` - edit own review
+* `DELETE /api/v1/reviews/{reviewId}` - delete own review
+
+### Admin
+
+* `GET /api/v1/admin/partners` - list partner applications
+* `PATCH /api/v1/admin/partners/{partnerId}/approve` - approve partner
+* `PATCH /api/v1/admin/partners/{partnerId}/reject` - reject partner
+* `GET /api/v1/admin/properties` - list all properties
+* `PATCH /api/v1/admin/properties/{propertyId}/publish` - publish property
+* `PATCH /api/v1/admin/properties/{propertyId}/unpublish` - unpublish property
+* `GET /api/v1/admin/bookings` - list all bookings
+* `GET /api/v1/admin/payments` - list all payments
+* `GET /api/v1/admin/reviews` - list all reviews
+* `PATCH /api/v1/admin/reviews/{reviewId}/hide` - hide review
+
+## Key Request Payloads
+
+### Create Booking
+
+`POST /api/v1/bookings`
+
+```json
+{
+  "propertyId": "prop_123",
+  "bookingType": "staycation",
+  "itemId": "pkg_123",
+  "checkIn": "2026-04-10",
+  "checkOut": "2026-04-11",
+  "guests": {
+    "adults": 2,
+    "children": 1
+  },
+  "addons": [
+    {
+      "type": "transport",
+      "id": "trp_001",
+      "quantity": 1
+    },
+    {
+      "type": "service",
+      "id": "add_001",
+      "quantity": 1
+    }
+  ],
+  "couponCode": "NEWUSER10",
+  "specialRequest": "Late check-in"
+}
+```
+
+### Create Payment Intent
+
+`POST /api/v1/payments/create-intent`
+
+```json
+{
+  "bookingId": "bok_123",
+  "currency": "USD"
+}
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "paymentId": "pay_123",
+    "clientSecret": "pi_test_secret",
+    "publishableKey": "pk_test_xxx",
+    "amount": 12000,
+    "currency": "usd",
+    "status": "pending"
+  }
+}
+```
+
+## Booking and Payment Flow
+
+### Standard Checkout Flow
+
+1. Customer requests a quote using `POST /api/v1/bookings/quote`.
+2. Customer creates a booking using `POST /api/v1/bookings`.
+3. Backend stores booking as `pending_payment`.
+4. Frontend requests Stripe test Payment Intent using `POST /api/v1/payments/create-intent`.
+5. Frontend confirms card payment using Stripe.js.
+6. Stripe sends webhook to `POST /api/v1/webhooks/stripe`.
+7. Backend verifies the event and updates payment state.
+8. Backend marks the booking as `confirmed`.
+
+### Cancel and Refund Flow
+
+1. Customer sends `POST /api/v1/bookings/{bookingId}/cancel`.
+2. Backend checks cancellation policy.
+3. If refundable, backend creates refund request.
+4. Payment status becomes `refund_pending`.
+5. After refund succeeds, payment becomes `refunded`.
+6. Booking becomes `cancelled` or `refunded`, depending on reporting rules.
+
+## Minimal Data Model
 
 Main entities:
 
 * User
-* Role
-* Hotel
-* Resort
+* Partner
 * Property
-* RoomType
+* Room
 * Package
 * Activity
-* EventVenue
-* TransportService
-* DecorationService
+* Venue
+* TransportOption
+* Addon
 * Booking
 * BookingItem
 * Payment
-* Review
 * Coupon
-* LoyaltyAccount
-* Referral
-* Comment
-* Offer
-* Location
-* Availability
-* PricingRule
-
----
-
-# 7. Schema Design
-
-I recommend a **normalized PostgreSQL schema**.
-
----
-
-# 7.1 Identity and Access
-
-```sql
-CREATE TABLE roles (
-    id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE
-);
-
-CREATE TABLE users (
-    id BIGSERIAL PRIMARY KEY,
-    full_name VARCHAR(150) NOT NULL,
-    email VARCHAR(150) UNIQUE,
-    phone VARCHAR(30) UNIQUE,
-    password_hash TEXT,
-    status VARCHAR(30) NOT NULL DEFAULT 'active',
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE user_roles (
-    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    role_id BIGINT NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
-    PRIMARY KEY (user_id, role_id)
-);
-
-CREATE TABLE user_addresses (
-    id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    label VARCHAR(50),
-    country VARCHAR(100),
-    state VARCHAR(100),
-    city VARCHAR(100),
-    area VARCHAR(100),
-    address_line TEXT,
-    latitude NUMERIC(10,7),
-    longitude NUMERIC(10,7),
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-```
-
----
-
-# 7.2 Locations
-
-```sql
-CREATE TABLE cities (
-    id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    state_name VARCHAR(100),
-    country_name VARCHAR(100) NOT NULL,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE
-);
-
-CREATE TABLE areas (
-    id BIGSERIAL PRIMARY KEY,
-    city_id BIGINT NOT NULL REFERENCES cities(id) ON DELETE CASCADE,
-    name VARCHAR(100) NOT NULL,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    UNIQUE(city_id, name)
-);
-```
-
----
-
-# 7.3 Partners and Properties
-
-```sql
-CREATE TABLE partners (
-    id BIGSERIAL PRIMARY KEY,
-    business_name VARCHAR(200) NOT NULL,
-    contact_person_name VARCHAR(150),
-    email VARCHAR(150),
-    phone VARCHAR(30),
-    status VARCHAR(30) NOT NULL DEFAULT 'pending',
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE properties (
-    id BIGSERIAL PRIMARY KEY,
-    partner_id BIGINT NOT NULL REFERENCES partners(id) ON DELETE RESTRICT,
-    property_type VARCHAR(30) NOT NULL, -- hotel, resort, villa, lodge
-    name VARCHAR(200) NOT NULL,
-    description TEXT,
-    city_id BIGINT REFERENCES cities(id),
-    area_id BIGINT REFERENCES areas(id),
-    address_line TEXT,
-    latitude NUMERIC(10,7),
-    longitude NUMERIC(10,7),
-    star_rating INT,
-    check_in_time TIME,
-    check_out_time TIME,
-    cancellation_policy TEXT,
-    child_policy TEXT,
-    pet_policy TEXT,
-    status VARCHAR(30) NOT NULL DEFAULT 'draft',
-    is_featured BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE property_images (
-    id BIGSERIAL PRIMARY KEY,
-    property_id BIGINT NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
-    image_url TEXT NOT NULL,
-    sort_order INT NOT NULL DEFAULT 0,
-    is_cover BOOLEAN NOT NULL DEFAULT FALSE
-);
-
-CREATE TABLE amenities (
-    id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE,
-    category VARCHAR(50)
-);
-
-CREATE TABLE property_amenities (
-    property_id BIGINT NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
-    amenity_id BIGINT NOT NULL REFERENCES amenities(id) ON DELETE CASCADE,
-    PRIMARY KEY (property_id, amenity_id)
-);
-```
-
----
-
-# 7.4 Room Inventory
-
-```sql
-CREATE TABLE room_types (
-    id BIGSERIAL PRIMARY KEY,
-    property_id BIGINT NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
-    name VARCHAR(150) NOT NULL,
-    description TEXT,
-    capacity_adults INT NOT NULL,
-    capacity_children INT NOT NULL DEFAULT 0,
-    bed_type VARCHAR(100),
-    room_size_sqft INT,
-    total_inventory INT NOT NULL,
-    base_price NUMERIC(12,2) NOT NULL,
-    status VARCHAR(30) NOT NULL DEFAULT 'active'
-);
-
-CREATE TABLE room_type_images (
-    id BIGSERIAL PRIMARY KEY,
-    room_type_id BIGINT NOT NULL REFERENCES room_types(id) ON DELETE CASCADE,
-    image_url TEXT NOT NULL,
-    sort_order INT NOT NULL DEFAULT 0
-);
-
-CREATE TABLE room_availability (
-    id BIGSERIAL PRIMARY KEY,
-    room_type_id BIGINT NOT NULL REFERENCES room_types(id) ON DELETE CASCADE,
-    stay_date DATE NOT NULL,
-    available_count INT NOT NULL,
-    price_override NUMERIC(12,2),
-    min_stay_nights INT,
-    max_stay_nights INT,
-    is_closed BOOLEAN NOT NULL DEFAULT FALSE,
-    UNIQUE(room_type_id, stay_date)
-);
-```
-
----
-
-# 7.5 Staycation and Daycation Packages
-
-```sql
-CREATE TABLE packages (
-    id BIGSERIAL PRIMARY KEY,
-    property_id BIGINT NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
-    package_type VARCHAR(30) NOT NULL, -- staycation, daycation, event, combo
-    title VARCHAR(200) NOT NULL,
-    description TEXT,
-    inclusions TEXT,
-    exclusions TEXT,
-    terms_conditions TEXT,
-    valid_from DATE,
-    valid_to DATE,
-    base_price NUMERIC(12,2) NOT NULL,
-    max_guests INT,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE package_availability (
-    id BIGSERIAL PRIMARY KEY,
-    package_id BIGINT NOT NULL REFERENCES packages(id) ON DELETE CASCADE,
-    available_date DATE NOT NULL,
-    start_time TIME,
-    end_time TIME,
-    available_count INT,
-    price_override NUMERIC(12,2),
-    is_closed BOOLEAN NOT NULL DEFAULT FALSE,
-    UNIQUE(package_id, available_date, start_time, end_time)
-);
-```
-
----
-
-# 7.6 Activities
-
-```sql
-CREATE TABLE activities (
-    id BIGSERIAL PRIMARY KEY,
-    property_id BIGINT NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
-    name VARCHAR(150) NOT NULL,
-    activity_type VARCHAR(50), -- adventure, leisure, cultural
-    description TEXT,
-    duration_minutes INT,
-    capacity INT,
-    age_limit_min INT,
-    age_limit_max INT,
-    base_price NUMERIC(12,2) NOT NULL,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE
-);
-
-CREATE TABLE activity_slots (
-    id BIGSERIAL PRIMARY KEY,
-    activity_id BIGINT NOT NULL REFERENCES activities(id) ON DELETE CASCADE,
-    slot_date DATE NOT NULL,
-    start_time TIME NOT NULL,
-    end_time TIME NOT NULL,
-    available_count INT NOT NULL,
-    price_override NUMERIC(12,2),
-    UNIQUE(activity_id, slot_date, start_time, end_time)
-);
-```
-
----
-
-# 7.7 Event Venues and Event Services
-
-```sql
-CREATE TABLE event_venues (
-    id BIGSERIAL PRIMARY KEY,
-    property_id BIGINT NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
-    name VARCHAR(150) NOT NULL,
-    venue_type VARCHAR(50) NOT NULL, -- wedding_hall, conference_hall, lawn, exhibition_space
-    description TEXT,
-    indoor_outdoor VARCHAR(20),
-    min_capacity INT,
-    max_capacity INT,
-    base_price NUMERIC(12,2) NOT NULL,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE
-);
-
-CREATE TABLE event_venue_slots (
-    id BIGSERIAL PRIMARY KEY,
-    event_venue_id BIGINT NOT NULL REFERENCES event_venues(id) ON DELETE CASCADE,
-    event_date DATE NOT NULL,
-    start_time TIME NOT NULL,
-    end_time TIME NOT NULL,
-    availability_status VARCHAR(30) NOT NULL DEFAULT 'available',
-    price_override NUMERIC(12,2),
-    UNIQUE(event_venue_id, event_date, start_time, end_time)
-);
-
-CREATE TABLE event_service_categories (
-    id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE -- decoration, catering, av, photography
-);
-
-CREATE TABLE event_services (
-    id BIGSERIAL PRIMARY KEY,
-    property_id BIGINT NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
-    category_id BIGINT NOT NULL REFERENCES event_service_categories(id),
-    name VARCHAR(150) NOT NULL,
-    description TEXT,
-    pricing_type VARCHAR(30) NOT NULL, -- fixed, per_person, per_hour, per_event
-    base_price NUMERIC(12,2) NOT NULL,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE
-);
-```
-
----
-
-# 7.8 Transport Services
-
-```sql
-CREATE TABLE transport_services (
-    id BIGSERIAL PRIMARY KEY,
-    property_id BIGINT NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
-    transport_mode VARCHAR(20) NOT NULL, -- road, air
-    service_type VARCHAR(50) NOT NULL, -- pickup, drop, roundtrip, charter
-    vehicle_type VARCHAR(50), -- car, jeep, van, bus, helicopter
-    source_location VARCHAR(150),
-    destination_location VARCHAR(150),
-    capacity INT,
-    base_price NUMERIC(12,2) NOT NULL,
-    pricing_type VARCHAR(20) NOT NULL DEFAULT 'fixed',
-    is_active BOOLEAN NOT NULL DEFAULT TRUE
-);
-
-CREATE TABLE transport_service_schedules (
-    id BIGSERIAL PRIMARY KEY,
-    transport_service_id BIGINT NOT NULL REFERENCES transport_services(id) ON DELETE CASCADE,
-    service_date DATE NOT NULL,
-    departure_time TIME,
-    arrival_time TIME,
-    available_count INT,
-    price_override NUMERIC(12,2)
-);
-```
-
----
-
-# 7.9 Booking Core
-
-Use a single booking root and child items.
-
-```sql
-CREATE TABLE bookings (
-    id BIGSERIAL PRIMARY KEY,
-    booking_code VARCHAR(50) NOT NULL UNIQUE,
-    user_id BIGINT NOT NULL REFERENCES users(id),
-    property_id BIGINT REFERENCES properties(id),
-    booking_type VARCHAR(30) NOT NULL, 
-    -- accommodation, staycation, daycation, activity, event, mixed
-    check_in_date DATE,
-    check_out_date DATE,
-    booking_date TIMESTAMP NOT NULL DEFAULT NOW(),
-    guest_count_adults INT NOT NULL DEFAULT 1,
-    guest_count_children INT NOT NULL DEFAULT 0,
-    special_request TEXT,
-    booking_status VARCHAR(30) NOT NULL DEFAULT 'pending',
-    payment_status VARCHAR(30) NOT NULL DEFAULT 'pending',
-    subtotal NUMERIC(12,2) NOT NULL DEFAULT 0,
-    discount_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
-    tax_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
-    service_fee NUMERIC(12,2) NOT NULL DEFAULT 0,
-    loyalty_redeemed_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
-    total_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
-    currency_code VARCHAR(10) NOT NULL DEFAULT 'NPR',
-    coupon_id BIGINT,
-    referral_code_used VARCHAR(50),
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE booking_items (
-    id BIGSERIAL PRIMARY KEY,
-    booking_id BIGINT NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
-    item_type VARCHAR(30) NOT NULL, 
-    -- room, package, activity, event_venue, event_service, transport
-    reference_id BIGINT NOT NULL,
-    title VARCHAR(200) NOT NULL,
-    quantity INT NOT NULL DEFAULT 1,
-    unit_price NUMERIC(12,2) NOT NULL,
-    discount_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
-    tax_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
-    total_price NUMERIC(12,2) NOT NULL,
-    meta_json JSONB
-);
-```
-
-`reference_id` is polymorphic. In enterprise systems this is common, but if you want stronger integrity, split into separate tables like `booking_room_items`, `booking_activity_items`, etc.
-
----
-
-# 7.10 Event Details
-
-```sql
-CREATE TABLE booking_events (
-    id BIGSERIAL PRIMARY KEY,
-    booking_id BIGINT NOT NULL UNIQUE REFERENCES bookings(id) ON DELETE CASCADE,
-    event_type VARCHAR(50) NOT NULL, -- wedding, birthday, office_gathering, conference
-    event_title VARCHAR(200),
-    attendee_count INT,
-    organizer_name VARCHAR(150),
-    organizer_phone VARCHAR(30),
-    organizer_email VARCHAR(150),
-    start_datetime TIMESTAMP,
-    end_datetime TIMESTAMP,
-    notes TEXT
-);
-```
-
----
-
-# 7.11 Guests
-
-```sql
-CREATE TABLE booking_guests (
-    id BIGSERIAL PRIMARY KEY,
-    booking_id BIGINT NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
-    full_name VARCHAR(150) NOT NULL,
-    age INT,
-    gender VARCHAR(20),
-    guest_type VARCHAR(20) NOT NULL DEFAULT 'adult'
-);
-```
-
----
-
-# 7.12 Coupons, Discounts, Promotions
-
-```sql
-CREATE TABLE coupons (
-    id BIGSERIAL PRIMARY KEY,
-    code VARCHAR(50) NOT NULL UNIQUE,
-    title VARCHAR(150) NOT NULL,
-    description TEXT,
-    discount_type VARCHAR(20) NOT NULL, -- percent, fixed
-    discount_value NUMERIC(12,2) NOT NULL,
-    min_order_amount NUMERIC(12,2),
-    max_discount_amount NUMERIC(12,2),
-    valid_from TIMESTAMP,
-    valid_to TIMESTAMP,
-    usage_limit_total INT,
-    usage_limit_per_user INT,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE
-);
-
-CREATE TABLE coupon_redemptions (
-    id BIGSERIAL PRIMARY KEY,
-    coupon_id BIGINT NOT NULL REFERENCES coupons(id),
-    user_id BIGINT NOT NULL REFERENCES users(id),
-    booking_id BIGINT REFERENCES bookings(id),
-    redeemed_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE promotions (
-    id BIGSERIAL PRIMARY KEY,
-    property_id BIGINT REFERENCES properties(id) ON DELETE CASCADE,
-    title VARCHAR(150) NOT NULL,
-    promo_type VARCHAR(30) NOT NULL, -- automatic, flash_sale, seasonal
-    discount_type VARCHAR(20) NOT NULL,
-    discount_value NUMERIC(12,2) NOT NULL,
-    valid_from TIMESTAMP,
-    valid_to TIMESTAMP,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    rules_json JSONB
-);
-```
-
----
-
-# 7.13 Loyalty Program
-
-```sql
-CREATE TABLE loyalty_accounts (
-    id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-    points_balance INT NOT NULL DEFAULT 0,
-    tier_name VARCHAR(30) NOT NULL DEFAULT 'silver',
-    lifetime_points INT NOT NULL DEFAULT 0,
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE loyalty_transactions (
-    id BIGSERIAL PRIMARY KEY,
-    loyalty_account_id BIGINT NOT NULL REFERENCES loyalty_accounts(id) ON DELETE CASCADE,
-    booking_id BIGINT REFERENCES bookings(id),
-    transaction_type VARCHAR(30) NOT NULL, -- earn, redeem, expire, adjust
-    points INT NOT NULL,
-    amount_value NUMERIC(12,2),
-    description TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-```
-
----
-
-# 7.14 Referral System
-
-```sql
-CREATE TABLE referrals (
-    id BIGSERIAL PRIMARY KEY,
-    referrer_user_id BIGINT NOT NULL REFERENCES users(id),
-    referee_user_id BIGINT REFERENCES users(id),
-    referral_code VARCHAR(50) NOT NULL,
-    status VARCHAR(30) NOT NULL DEFAULT 'pending', -- pending, qualified, rewarded, cancelled
-    booking_id BIGINT REFERENCES bookings(id),
-    reward_amount NUMERIC(12,2),
-    reward_points INT,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-```
-
----
-
-# 7.15 Payments and Refunds
-
-```sql
-CREATE TABLE payments (
-    id BIGSERIAL PRIMARY KEY,
-    booking_id BIGINT NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
-    payment_provider VARCHAR(50) NOT NULL,
-    provider_transaction_id VARCHAR(150),
-    payment_method VARCHAR(50) NOT NULL, -- card, wallet, bank, cash
-    amount NUMERIC(12,2) NOT NULL,
-    currency_code VARCHAR(10) NOT NULL DEFAULT 'NPR',
-    payment_status VARCHAR(30) NOT NULL, -- pending, success, failed, refunded, partial_refund
-    paid_at TIMESTAMP,
-    raw_response_json JSONB,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE refunds (
-    id BIGSERIAL PRIMARY KEY,
-    payment_id BIGINT NOT NULL REFERENCES payments(id) ON DELETE CASCADE,
-    refund_amount NUMERIC(12,2) NOT NULL,
-    refund_reason TEXT,
-    refund_status VARCHAR(30) NOT NULL,
-    refunded_at TIMESTAMP,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-```
-
----
-
-# 7.16 Ratings, Reviews, Comments
-
-```sql
-CREATE TABLE reviews (
-    id BIGSERIAL PRIMARY KEY,
-    booking_id BIGINT NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
-    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    property_id BIGINT NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
-    rating_overall NUMERIC(2,1) NOT NULL,
-    rating_cleanliness NUMERIC(2,1),
-    rating_service NUMERIC(2,1),
-    rating_location NUMERIC(2,1),
-    title VARCHAR(150),
-    comment TEXT,
-    status VARCHAR(30) NOT NULL DEFAULT 'published',
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    UNIQUE(booking_id, user_id)
-);
-
-CREATE TABLE review_comments (
-    id BIGSERIAL PRIMARY KEY,
-    review_id BIGINT NOT NULL REFERENCES reviews(id) ON DELETE CASCADE,
-    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    comment TEXT NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-```
-
----
-
-# 7.17 Wishlist / Favorites
-
-```sql
-CREATE TABLE favorites (
-    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    property_id BIGINT NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (user_id, property_id)
-);
-```
-
----
-
-# 7.18 Notifications
-
-```sql
-CREATE TABLE notifications (
-    id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    channel VARCHAR(20) NOT NULL, -- email, sms, push, inapp
-    title VARCHAR(150) NOT NULL,
-    message TEXT NOT NULL,
-    status VARCHAR(30) NOT NULL DEFAULT 'pending',
-    sent_at TIMESTAMP,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-```
-
----
-
-# 7.19 Audit Logs
-
-```sql
-CREATE TABLE audit_logs (
-    id BIGSERIAL PRIMARY KEY,
-    actor_user_id BIGINT REFERENCES users(id),
-    entity_name VARCHAR(100) NOT NULL,
-    entity_id BIGINT,
-    action VARCHAR(50) NOT NULL,
-    old_values JSONB,
-    new_values JSONB,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-```
-
----
-
-# 8. Recommended Stronger Schema Option for Booking Items
-
-For robustness, instead of one polymorphic `booking_items`, you can use:
-
-* `booking_room_items`
-* `booking_package_items`
-* `booking_activity_items`
-* `booking_event_venue_items`
-* `booking_event_service_items`
-* `booking_transport_items`
-
-This gives:
-
-* stronger foreign key integrity
-* better reporting
-* easier validation
-
-For a serious production system, I recommend this stronger option.
-
----
-
-# 9. Important Business Rules
-
-## Availability
-
-* room cannot be overbooked
-* event venue slot cannot be double-booked
-* activity slot cannot exceed capacity
-* transport schedule cannot exceed available seats/units
-
-## Booking Status
-
-Suggested values:
-
-* pending
-* reserved
-* confirmed
-* cancelled
-* completed
-* no_show
-* expired
-
-## Payment Status
-
-* pending
-* authorized
-* paid
-* failed
-* partially_refunded
-* refunded
-
-## Review Rules
-
-* only completed bookings can review
-* one main review per booking per user
-* partner can reply, not alter customer review
-
-## Referral Rules
-
-* referrer rewarded only after referee’s first completed eligible booking
-* self-referral blocked
-* suspicious account/device patterns flagged
-
-## Loyalty Rules
-
-* points awarded after completion, not just payment
-* redemption cannot exceed configured percent of order
-* points may expire after set time
-
----
-
-# 10. Search and Filter Design
-
-To support your required filters, index these:
-
-## Main searchable/filterable fields
-
-* property city_id
-* property area_id
-* property_type
-* room/package base price
-* rating average
-* event venue capacity
-* transport mode
-* activity type
-* promotion active window
-
-## Suggested indexes
-
-```sql
-CREATE INDEX idx_properties_city_area ON properties(city_id, area_id);
-CREATE INDEX idx_properties_type_status ON properties(property_type, status);
-CREATE INDEX idx_room_availability_date ON room_availability(room_type_id, stay_date);
-CREATE INDEX idx_package_availability_date ON package_availability(package_id, available_date);
-CREATE INDEX idx_activity_slots_date ON activity_slots(activity_id, slot_date);
-CREATE INDEX idx_event_venue_slots_date ON event_venue_slots(event_venue_id, event_date);
-CREATE INDEX idx_bookings_user_status ON bookings(user_id, booking_status);
-CREATE INDEX idx_reviews_property ON reviews(property_id);
-```
-
-For text search:
-
-```sql
-CREATE INDEX idx_properties_name_search 
-ON properties USING GIN (to_tsvector('english', name || ' ' || COALESCE(description,'')));
-```
-
----
-
-# 11. API Design Suggestion
-
-## Public APIs
-
-* `POST /auth/register`
-* `POST /auth/login`
-* `GET /properties`
-* `GET /properties/{id}`
-* `GET /properties/{id}/availability`
-* `GET /packages`
-* `GET /activities`
-* `GET /event-venues`
-* `POST /bookings`
-* `GET /bookings/{id}`
-* `POST /payments/initiate`
-* `POST /payments/webhook`
-* `POST /reviews`
-* `POST /referrals/apply`
-* `GET /loyalty/account`
-
-## Partner APIs
-
-* `POST /partner/properties`
-* `POST /partner/room-types`
-* `POST /partner/packages`
-* `POST /partner/activities`
-* `POST /partner/event-venues`
-* `POST /partner/event-services`
-* `POST /partner/transport-services`
-* `GET /partner/bookings`
-
-## Admin APIs
-
-* `GET /admin/partners`
-* `PATCH /admin/partners/{id}/approve`
-* `POST /admin/coupons`
-* `POST /admin/promotions`
-* `GET /admin/reports/revenue`
-
----
-
-# 12. Use Cases
-
-## Use Case 1: Staycation booking
-
-* user selects hotel
-* chooses date and room/package
-* adds airport pick-up
-* applies coupon
-* pays
-* booking confirmed
-
-## Use Case 2: Daycation office outing
-
-* corporate user selects resort
-* chooses daycation package
-* adds lunch + activities + bus transport
-* pays deposit
-* receives booking confirmation
-
-## Use Case 3: Wedding event
-
-* user selects venue
-* chooses date/time slot
-* adds decoration, catering, photography
-* confirms attendee estimate
-* pays advance
-* venue reserved
-
-## Use Case 4: Product launch
-
-* company selects conference/event hall
-* adds stage, projector, branding, refreshments
-* books transport for VIP guests
-* confirms service package
-
----
-
-# 13. MVP Scope
-
-For MVP, build these first:
-
-## Phase 1 MVP
-
-* user auth
-* property listing
-* search/filter by area and price
-* room/staycation/daycation booking
+* Review
+
+## Database Schema
+
+`schema.sql` is the single source of truth for the production-grade database design:
+
+* SQL Server aligned with `.Net 10`
+* mixed auth support with local auth plus Google/social identities
+* JWT refresh-session storage
+* API-driven geography
+* typed booking item tables
+* Stripe-compatible payments, refunds, and webhook tracking
+* audit/history tables for booking and payment state changes
+
+See [schema.sql](/Users/maccy/bookyourstay/schema.sql) for the full schema.
+
+### Schema Summary by Domain
+
+* `iam` - users, identities, sessions, roles, addresses
+* `core` - partners and partner users
+* `catalog` - properties, room types, packages, activities, venues, transport, add-ons
+* `inventory` - room, package, activity, and venue availability
+* `booking` - bookings, typed booking items, coupons, booking history
+* `billing` - payments, refunds, payment history
+* `integration` - webhook events
+* `engagement` - reviews
+
+## Suggested Tech Stack
+
+* frontend: Next.js
+* backend: .Net 10
+* database: SQL Server
+* cache: Redis
+* object storage: S3-compatible storage
+* payments: Stripe test mode
+
+## Non-Functional Requirements
+
+* search should respond within 2 to 3 seconds for normal queries
+* booking creation must prevent double booking
+* payment webhooks must be idempotent
+* protected APIs must use RBAC
+* all booking and payment state changes must be logged
+
+## Delivery Plan
+
+### Phase 1
+
+* auth
+* partner onboarding
+* property management
+* room and package booking
+* search and filters
 * coupons
-* payment
+* dummy Stripe payment
+* booking history
 * reviews
-* partner dashboard basic
 
-## Phase 2
+### Phase 2
 
 * activities
-* transport
+* event venues
+* transport add-ons
+* service add-ons
+* admin reporting
+
+### Phase 3
+
 * loyalty
-* referral
-* event venue booking
+* referrals
+* corporate bookings
+* advanced pricing and analytics
 
-## Phase 3
+## Final Notes
 
-* decoration/services
-* corporate booking workflows
-* advanced analytics
-* dynamic pricing
-* vendor marketplace
-
----
-
-# 14. Risks and Challenges
-
-* inventory consistency under concurrent booking
-* cancellation/refund complexity
-* event bookings need custom workflows
-* transport and air services may need approval/manual confirmation
-* fraud in coupons/referrals
-* seasonality and dynamic pricing complexity
-* many add-ons can make checkout messy
-
----
-
-
+This product should be built as a modular monolith first. Keep booking, inventory, pricing, and payment logic separated into clear modules, but avoid early microservices. The highest-risk area is the booking and payment flow, so inventory locking, webhook verification, and status transitions should be implemented carefully from the start.
