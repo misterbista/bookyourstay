@@ -1,6 +1,52 @@
 name: bookyourstay
 
+x-dev-base: &dev-base
+  build:
+    context: .
+    dockerfile: infra/docker/dev/Dockerfile
+    args:
+      USER_UID: ${LOCAL_UID:-1000}
+      USER_GID: ${LOCAL_GID:-1000}
+  working_dir: /workspace
+  stdin_open: true
+  tty: true
+  environment:
+    ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+    ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB:-bookyourstay};Username=${POSTGRES_USER:-bookyourstay};Password=${POSTGRES_PASSWORD:-bookyourstay}
+    MINIO_ENDPOINT: http://minio:9000
+    MINIO_BUCKET: ${MINIO_BUCKET:-bookyourstay}
+    MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+    MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+  depends_on:
+    postgres:
+      condition: service_healthy
+    minio:
+      condition: service_healthy
+    minio-init:
+      condition: service_completed_successfully
+  volumes:
+    - .:/workspace
+    - bun_cache:/home/dev/.bun/install/cache
+    - nuget_cache:/home/dev/.nuget/packages
+
 services:
+  dev-env:
+    <<: *dev-base
+    container_name: bookyourstay-dev-env
+    command: ["sleep", "infinity"]
+
+  backend-dev:
+    <<: *dev-base
+    command: ["dotnet", "watch", "--project", "apps/backend", "run", "--urls", "http://0.0.0.0:8080"]
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+
+  frontend-dev:
+    <<: *dev-base
+    command: ["bun", "run", "--filter", "frontend", "dev", "--", "--hostname", "0.0.0.0", "--port", "3000"]
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+
   postgres:
     image: postgres:16-alpine
     container_name: bookyourstay-postgres
@@ -89,4 +135,6 @@ services:
   #     - "${APP_PORT:-8080}:8080"
 
 volumes:
+  bun_cache:
   minio_data:
+  nuget_cache:

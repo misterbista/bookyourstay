@@ -4,21 +4,29 @@ This guide covers local setup for the BookYourStay monorepo.
 
 ## Prerequisites
 
-Install these tools before starting:
+Choose one of these local setup modes:
 
-- Bun `1.3.4` or newer
-- .NET SDK `10.x`
 - Docker Desktop or Docker Engine with `docker compose`
 - Git
 
-You can verify the toolchain with:
+For host-native development, also install:
+
+- Bun `1.3.4` or newer
+- .NET SDK `10.x`
+
+You can verify the container-first toolchain with:
+
+```bash
+docker --version
+docker compose version
+git --version
+```
+
+For host-native development, you can additionally verify:
 
 ```bash
 bun --version
 dotnet --version
-docker --version
-docker compose version
-git --version
 ```
 
 ## Repository Setup
@@ -30,6 +38,8 @@ git --version
 ```bash
 bun install
 ```
+
+If you plan to work entirely through Docker, you can skip this step on the host and use `./dev install` later instead.
 
 ## Environment Setup
 
@@ -47,6 +57,12 @@ Default local values are set for:
 - MinIO root credentials, bucket, and ports
 - `ASPNETCORE_ENVIRONMENT=Development`
 - `APP_PORT=8080`
+- `BACKEND_PORT=8080`
+- `FRONTEND_PORT=3000`
+
+Optional local overrides:
+
+- `LOCAL_UID` and `LOCAL_GID` let the dev container match your host user on Linux
 
 The backend also has development defaults in [`../apps/backend/appsettings.Development.json`](../apps/backend/appsettings.Development.json), including the local Postgres connection string and JWT settings.
 
@@ -76,6 +92,55 @@ Default local service endpoints:
 - Postgres: `localhost:5432`
 - MinIO API: `http://localhost:9000`
 - MinIO Console: `http://localhost:9001`
+
+## Containerized Developer Environment
+
+The monorepo includes a `dev-env` container with:
+
+- .NET SDK `10`
+- Bun `1.3.4`
+- Git, curl, and basic shell tools
+
+Build and start the containerized environment:
+
+```bash
+sh ./dev up
+```
+
+Useful companion commands:
+
+```bash
+sh ./dev build
+sh ./dev shell
+sh ./dev down
+```
+
+After the container is up, install workspace dependencies inside it:
+
+```bash
+sh ./dev install
+```
+
+Run the apps from inside the containerized environment:
+
+```bash
+sh ./dev backend
+sh ./dev frontend
+```
+
+Exposed local ports:
+
+- Frontend: `http://localhost:3000`
+- Backend: `http://localhost:8080`
+
+Notes:
+
+- source code is bind-mounted into `/workspace`
+- Bun and NuGet caches are persisted in Docker volumes for faster rebuilds
+- use `sh ./dev shell` if you want to work entirely inside the container
+- this path does not require Bun or .NET to be installed on the host
+- `sh ./dev up` starts the shell/tooling container without claiming app ports
+- `sh ./dev backend` and `sh ./dev frontend` start dedicated app containers only when needed
 
 ## Run The Backend
 
@@ -127,7 +192,7 @@ To run backend and frontend together:
 bun run dev:all
 ```
 
-This starts both watch processes from the monorepo root.
+This starts Postgres and MinIO first, then launches both watch processes from the monorepo root.
 
 ## Verification Commands
 

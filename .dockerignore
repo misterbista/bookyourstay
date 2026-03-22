@@ -1,0 +1,14 @@
+.git
+.github
+.idea
+.vscode
+.data
+node_modules
+**/node_modules
+**/.next
+**/bin
+**/obj
+**/TestResults
+coverage
+bun.lockb
+

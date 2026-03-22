@@ -5,19 +5,18 @@ using backend.Features.Auth.Security;
 using backend.Shared.Data.Migrations;
 using Microsoft.AspNetCore.Identity;
 using Npgsql;
+using System.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
-builder.Services
-    .AddEzyMediatr()
-    .UseDapper(() => new NpgsqlConnection(
-        builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.")))
-    .WrapEveryRequest();
+builder.Services.AddEzyMediatr();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IDbConnection>(_ => new NpgsqlConnection(
+    builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.")));
 builder.Services
     .AddOptions<JwtOptions>()
     .Bind(builder.Configuration.GetSection(JwtOptions.SectionName))

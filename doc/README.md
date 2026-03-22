@@ -77,6 +77,17 @@ bun run infra:down
 bun run infra:logs
 ```
 
+Containerized dev environment:
+
+```bash
+sh ./dev up
+sh ./dev install
+sh ./dev shell
+sh ./dev backend
+sh ./dev frontend
+sh ./dev down
+```
+
 ## Docs Index
 
 - Development Setup: [dev-setup.md](dev-setup.md)

@@ -1,14 +1,12 @@
 using Dapper;
 using backend.Features.Auth.Domain;
-using EzyMediatr.Core.Transactions;
 using System.Data;
 
 namespace backend.Features.Auth.Persistence;
 
-public sealed class AuthRepository(ISqlUnitOfWork db)
+public sealed class AuthRepository(IDbConnection connection)
 {
-    // Npgsql transactions are connection-scoped; WrapEveryRequest() handles begin/commit/rollback.
-    private IDbConnection Connection => db.Connection;
+    private IDbConnection Connection => connection;
 
     public async Task<bool> EmailExistsAsync(string normalizedEmail, CancellationToken cancellationToken)
     {
