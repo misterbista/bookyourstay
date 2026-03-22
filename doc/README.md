@@ -27,7 +27,7 @@ cp .env.example .env
 2. Install local dependencies:
 
 ```bash
-bun run install
+bun run bootstrap
 ```
 
 3. Start local infrastructure:
@@ -56,7 +56,7 @@ bun run check
 Local development helpers:
 
 ```bash
-bun run install
+bun run bootstrap
 bun run infra:up
 bun run dev:backend
 bun run dev:frontend

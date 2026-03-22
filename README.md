@@ -4,7 +4,7 @@ Local development:
 
 ```bash
 cp .env.example .env
-bun run install
+bun run bootstrap
 bun run infra:up
 bun run dev:backend
 bun run dev:frontend

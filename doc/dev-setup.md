@@ -52,7 +52,7 @@ The backend also has development defaults in [`../apps/backend/appsettings.Devel
 Install JavaScript packages and restore the .NET solution:
 
 ```bash
-bun run install
+bun run bootstrap
 ```
 
 This runs:
@@ -78,7 +78,7 @@ bun run infra:down
 
 The default flow is:
 
-1. Run `bun run install` once after cloning or whenever dependencies change.
+1. Run `bun run bootstrap` once after cloning or whenever dependencies change.
 2. Start local infrastructure with `bun run infra:up`.
 3. Keep editing files locally from your normal IDE or editor.
 4. Run `bun run dev:backend` and `bun run dev:frontend` in separate local terminals when you want the app servers running.
@@ -176,7 +176,7 @@ What each one does:
 For normal day-to-day development:
 
 1. Run `cp .env.example .env` once.
-2. Run `bun run install`.
+2. Run `bun run bootstrap`.
 3. Start infrastructure with `bun run infra:up`.
 4. Open one terminal for `bun run dev:backend` and another for `bun run dev:frontend`.
 5. Before committing, run `bun run check`.

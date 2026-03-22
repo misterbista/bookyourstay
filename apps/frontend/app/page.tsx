@@ -1,5 +1,5 @@
-import { AuthWorkspace } from "@/components/auth/auth-workspace"
+import { HomePage } from "@/features/home/components/home-page"
 
 export default function Page() {
-  return <AuthWorkspace />
+  return <HomePage />
 }
