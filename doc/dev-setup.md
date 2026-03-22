@@ -65,6 +65,12 @@ bun run infra:logs
 bun run infra:down
 ```
 
+Local persistence:
+
+- Postgres data is bind-mounted to `./.data/postgres`
+- removing the container will not remove your local database files
+- deleting `./.data/postgres` will reset the local Postgres data set
+
 Default local service endpoints:
 
 - Postgres: `localhost:5432`

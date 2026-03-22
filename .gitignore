@@ -8,6 +8,9 @@ node_modules/
 .env.*
 !.env.example
 
+# Local infrastructure data
+.data/
+
 # JavaScript / Bun / Next.js
 .next/
 out/
