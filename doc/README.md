@@ -79,6 +79,7 @@ bun run infra:logs
 
 ## Docs Index
 
+- Development Setup: [dev-setup.md](dev-setup.md)
 - SRS: [srs.md](srs.md)
 - Database: [database.md](database.md)
 - Backend: [backend.md](backend.md)
