@@ -1,0 +1,62 @@
+using EzyMediatr.DependencyInjection;
+using backend.Features.Auth.Domain;
+using backend.Features.Auth.Persistence;
+using backend.Features.Auth.Security;
+using backend.Shared.Data.Migrations;
+using Microsoft.AspNetCore.Identity;
+using Npgsql;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers();
+builder.Services.AddOpenApi();
+builder.Services.AddProblemDetails();
+builder.Services
+    .AddEzyMediatr()
+    .UseDapper(() => new NpgsqlConnection(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.")))
+    .WrapEveryRequest();
+builder.Services.AddHttpContextAccessor();
+builder.Services
+    .AddOptions<JwtOptions>()
+    .Bind(builder.Configuration.GetSection(JwtOptions.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddScoped<AuthRepository>();
+builder.Services.AddSingleton<IPasswordHasher<AuthIdentity>, PasswordHasher<AuthIdentity>>();
+builder.Services.AddSingleton<JwtTokenService>();
+
+var shouldRunMigrations = builder.Configuration.GetValue("Database:RunMigrationsOnStartup", !builder.Environment.IsEnvironment("Testing"));
+if (shouldRunMigrations)
+{
+    var migrationRunner = new MigrationRunner(builder.Configuration, builder.Environment);
+    migrationRunner.RunAll();
+}
+
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
+
+app.UseExceptionHandler();
+app.UseStatusCodePages();
+app.UseHttpsRedirection();
+
+app.MapGet("/", () =>
+        Results.Ok(new
+        {
+            name = "BookYourStay API",
+            version = "v1",
+            architecture = "micro-feature"
+        }))
+    .WithTags("Root");
+
+app.MapControllers();
+
+app.Run();
+
+public partial class Program;

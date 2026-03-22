@@ -1,0 +1,25 @@
+.DS_Store
+
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# JavaScript / Bun / Next.js
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# .NET
+**/bin/
+**/obj/
+**/TestResults/
+.coverage
+
+# Editors
+.idea/
+.vscode/
