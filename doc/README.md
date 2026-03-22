@@ -1,6 +1,6 @@
 # BookYourStay Docs
 
-BookYourStay is a polyglot monorepo for a booking platform. The repository currently contains a .NET 10 backend and a Next.js frontend, with Bun orchestrating the JavaScript workspace tasks from the root.
+BookYourStay is a polyglot monorepo for a booking platform. The repository currently contains a .NET 10 backend and a Next.js frontend, with Docker used only for local infrastructure services.
 
 ## Repository Layout
 
@@ -11,34 +11,35 @@ BookYourStay is a polyglot monorepo for a booking platform. The repository curre
 |   `-- frontend/   # Next.js app workspace
 |-- doc/            # Repository documentation
 |-- packages/       # Reserved for shared JS/TS packages
-|-- compose.yml     # Local Postgres + MinIO services
+|-- compose.yml     # Local infrastructure
 |-- schema.sql      # Product-level schema draft
 `-- package.json    # Root monorepo scripts
 ```
 
 ## Quick Start
 
-1. Install dependencies:
+1. Copy the local environment template:
 
 ```bash
-bun install
+cp .env.example .env
 ```
 
-2. Start local infrastructure:
+2. Install local dependencies:
+
+```bash
+bun run install
+```
+
+3. Start local infrastructure:
 
 ```bash
 bun run infra:up
 ```
 
-3. Run the backend:
+4. Start the app processes from separate terminals when you need them:
 
 ```bash
 bun run dev:backend
-```
-
-4. Run the frontend:
-
-```bash
 bun run dev:frontend
 ```
 
@@ -52,40 +53,15 @@ bun run typecheck
 bun run check
 ```
 
-Backend-specific:
+Local development helpers:
 
 ```bash
-bun run dev:backend
-bun run build:backend
-bun run test:backend
-```
-
-Frontend-specific:
-
-```bash
-bun run dev:frontend
-bun run build:frontend
-bun run lint:frontend
-bun run typecheck:frontend
-```
-
-Infrastructure:
-
-```bash
+bun run install
 bun run infra:up
+bun run dev:backend
+bun run dev:frontend
+bun run test:backend
 bun run infra:down
-bun run infra:logs
-```
-
-Containerized dev environment:
-
-```bash
-sh ./dev up
-sh ./dev install
-sh ./dev shell
-sh ./dev backend
-sh ./dev frontend
-sh ./dev down
 ```
 
 ## Docs Index
@@ -99,7 +75,7 @@ sh ./dev down
 
 ## Product Summary
 
-The product is aimed at hotel, resort, event venue, activity, and package bookings with optional services like transport, decoration, and catering. The current backend foundation focuses on authentication and database migrations, while the frontend workspace is ready to grow into the customer-facing experience.
+The product is aimed at hotel, resort, event venue, activity, and package bookings with optional services like transport, decoration, and catering. The current backend foundation focuses on authentication and database migrations, while the frontend app is ready to grow into the customer-facing experience.
 
 ## Database
 

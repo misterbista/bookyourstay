@@ -1,55 +1,39 @@
 # Development Setup
 
-This guide covers local setup for the BookYourStay monorepo.
+This guide covers local setup for the BookYourStay monorepo. Docker is only used for local infrastructure; Bun and .NET run directly on your host machine.
 
 ## Prerequisites
 
-Choose one of these local setup modes:
+The default toolchain requirements are:
 
+- Bun `1.3.4`
+- .NET SDK `10`
 - Docker Desktop or Docker Engine with `docker compose`
 - Git
 
-For host-native development, also install:
-
-- Bun `1.3.4` or newer
-- .NET SDK `10.x`
-
-You can verify the container-first toolchain with:
-
-```bash
-docker --version
-docker compose version
-git --version
-```
-
-For host-native development, you can additionally verify:
+You can verify the local toolchain with:
 
 ```bash
 bun --version
 dotnet --version
+docker --version
+docker compose version
+git --version
 ```
 
 ## Repository Setup
 
 1. Clone the repository.
 2. Move into the project root.
-3. Install JavaScript workspace dependencies:
-
-```bash
-bun install
-```
-
-If you plan to work entirely through Docker, you can skip this step on the host and use `./dev install` later instead.
-
-## Environment Setup
-
-The repo includes a shared environment template at [`../.env.example`](../.env.example).
-
-Create your local environment file:
+3. Create your local environment file:
 
 ```bash
 cp .env.example .env
 ```
+
+## Environment Setup
+
+The repo includes a shared environment template at [`../.env.example`](../.env.example).
 
 Default local values are set for:
 
@@ -59,49 +43,26 @@ Default local values are set for:
 - `APP_PORT=8080`
 - `BACKEND_PORT=8080`
 - `FRONTEND_PORT=3000`
-
-Optional local overrides:
-
-- `LOCAL_UID` and `LOCAL_GID` let the dev container match your host user on Linux
+- `NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api/v1`
 
 The backend also has development defaults in [`../apps/backend/appsettings.Development.json`](../apps/backend/appsettings.Development.json), including the local Postgres connection string and JWT settings.
 
-## Start Local Infrastructure
+## Install Dependencies
 
-Bring up Postgres and MinIO from the repo root:
-
-```bash
-bun run infra:up
-```
-
-Useful companion commands:
+Install JavaScript packages and restore the .NET solution:
 
 ```bash
-bun run infra:logs
-bun run infra:down
+bun run install
 ```
 
-Local persistence:
+This runs:
 
-- Postgres data is bind-mounted to `./.data/postgres`
-- removing the container will not remove your local database files
-- deleting `./.data/postgres` will reset the local Postgres data set
+- `bun install --frozen-lockfile`
+- `dotnet restore bookyourstay.sln -p:NuGetAudit=false`
 
-Default local service endpoints:
+## Local Infrastructure
 
-- Postgres: `localhost:5432`
-- MinIO API: `http://localhost:9000`
-- MinIO Console: `http://localhost:9001`
-
-## Containerized Developer Environment
-
-The monorepo includes a `dev-env` container with:
-
-- .NET SDK `10`
-- Bun `1.3.4`
-- Git, curl, and basic shell tools
-
-Build and start the containerized environment:
+Bring up Postgres and MinIO:
 
 ```bash
 sh ./dev up
@@ -110,41 +71,49 @@ sh ./dev up
 Useful companion commands:
 
 ```bash
-sh ./dev build
-sh ./dev shell
-sh ./dev down
+bun run infra:logs
+bun run infra:ps
+bun run infra:down
 ```
 
-After the container is up, install workspace dependencies inside it:
+The default flow is:
+
+1. Run `bun run install` once after cloning or whenever dependencies change.
+2. Start local infrastructure with `bun run infra:up`.
+3. Keep editing files locally from your normal IDE or editor.
+4. Run `bun run dev:backend` and `bun run dev:frontend` in separate local terminals when you want the app servers running.
+
+Useful direct execution commands:
 
 ```bash
-sh ./dev install
+bun install
+dotnet restore bookyourstay.sln
 ```
 
-Run the apps from inside the containerized environment:
+Run the app servers from separate local terminals:
 
 ```bash
-sh ./dev backend
-sh ./dev frontend
+bun run dev:backend
+bun run dev:frontend
 ```
 
 Exposed local ports:
 
 - Frontend: `http://localhost:3000`
 - Backend: `http://localhost:8080`
+- Postgres: `localhost:5432`
+- MinIO API: `http://localhost:9000`
+- MinIO Console: `http://localhost:9001`
 
 Notes:
 
-- source code is bind-mounted into `/workspace`
-- Bun and NuGet caches are persisted in Docker volumes for faster rebuilds
-- use `sh ./dev shell` if you want to work entirely inside the container
-- this path does not require Bun or .NET to be installed on the host
-- `sh ./dev up` starts the shell/tooling container without claiming app ports
-- `sh ./dev backend` and `sh ./dev frontend` start dedicated app containers only when needed
+- Docker is only needed for Postgres and MinIO
+- Bun and .NET must be installed on the host
+- adjust ports or runtime settings in `.env` and app settings as needed
 
 ## Run The Backend
 
-Start the backend in watch mode:
+Start the backend in watch mode from a local terminal:
 
 ```bash
 bun run dev:backend
@@ -154,18 +123,18 @@ What to expect:
 
 - ASP.NET Core starts from [`../apps/backend`](../apps/backend)
 - database migrations run on startup unless disabled
-- the API root responds at `http://localhost:5000/` or `https://localhost:7xxx/` depending on local launch settings and `dotnet watch`
+- the API root responds at `http://localhost:8080/`
 - OpenAPI is exposed in development
 
 If you want a one-off run instead of watch mode:
 
 ```bash
-bun run start:backend
+bun run start:backend --urls http://localhost:8080
 ```
 
 ## Run The Frontend
 
-Start the Next.js app from the monorepo root:
+Start the Next.js app from a local terminal:
 
 ```bash
 bun run dev:frontend
@@ -181,26 +150,15 @@ For a production-style local run:
 
 ```bash
 bun run build:frontend
-bun run start:frontend
+bun run start:frontend -- --port 3000
 ```
-
-## Run Both Apps
-
-To run backend and frontend together:
-
-```bash
-bun run dev:all
-```
-
-This starts Postgres and MinIO first, then launches both watch processes from the monorepo root.
 
 ## Verification Commands
 
 Use these commands to confirm the repo is healthy:
 
 ```bash
-bun run build
-bun run test
+bun run test:backend
 bun run lint
 bun run typecheck
 bun run check
@@ -208,20 +166,19 @@ bun run check
 
 What each one does:
 
-- `bun run build`: builds backend and frontend
-- `bun run test`: runs backend unit and integration tests
-- `bun run lint`: runs frontend ESLint
-- `bun run typecheck`: runs frontend TypeScript checks
-- `bun run check`: runs the main verification suite end to end
+- `bun run test:backend`: runs backend tests on the host
+- `bun run lint`: runs frontend ESLint on the host
+- `bun run typecheck`: runs frontend TypeScript checks on the host
+- `bun run check`: runs the main verification suite end to end on the host
 
 ## Recommended Workflow
 
 For normal day-to-day development:
 
-1. Run `bun install` after pulling dependency changes.
-2. Start infra with `bun run infra:up`.
-3. Start backend with `bun run dev:backend`.
-4. Start frontend with `bun run dev:frontend`.
+1. Run `cp .env.example .env` once.
+2. Run `bun run install`.
+3. Start infrastructure with `bun run infra:up`.
+4. Open one terminal for `bun run dev:backend` and another for `bun run dev:frontend`.
 5. Before committing, run `bun run check`.
 
 ## Troubleshooting
@@ -246,8 +203,8 @@ Check these items:
 Try:
 
 ```bash
-rm -rf apps/frontend/.next
-bun run dev:frontend
+bun run infra:down
+bun run infra:up
 ```
 
 ### Tests Fail Because Of Local State
@@ -257,7 +214,7 @@ Try:
 ```bash
 bun run infra:down
 bun run infra:up
-bun run test:backend
+bun run check
 ```
 
 ## Related Docs

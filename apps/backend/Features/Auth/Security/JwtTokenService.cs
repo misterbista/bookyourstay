@@ -19,6 +19,7 @@ public sealed class JwtTokenService
     {
         _options = options.Value;
         _timeProvider = timeProvider;
+        _tokenHandler.MapInboundClaims = false;
 
         var secretKeyBytes = Encoding.UTF8.GetBytes(_options.SecretKey);
         var signingKey = new SymmetricSecurityKey(secretKeyBytes);

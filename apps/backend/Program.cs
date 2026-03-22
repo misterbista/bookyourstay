@@ -8,11 +8,28 @@ using Npgsql;
 using System.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+const string FrontendDevCorsPolicy = "FrontendDev";
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddEzyMediatr();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(FrontendDevCorsPolicy, policy =>
+    {
+        policy
+            .SetIsOriginAllowed(origin =>
+            {
+                if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+                    return false;
+
+                return uri.Host is "localhost" or "127.0.0.1";
+            })
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IDbConnection>(_ => new NpgsqlConnection(
     builder.Configuration.GetConnectionString("DefaultConnection")
@@ -39,11 +56,15 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseCors(FrontendDevCorsPolicy);
 }
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.MapGet("/", () =>
         Results.Ok(new
