@@ -6,10 +6,9 @@ using backend.Features.Auth.Services;
 namespace backend.Features.Auth.Commands.Register;
 
 public sealed class RegisterCommandHandler(
-    AuthRepository repository,
+    IAuthRepository repository,
     PasswordService passwordService,
-    JwtService jwtService,
-    TimeProvider timeProvider)
+    AuthSessionService authSessions)
 {
     public async Task<ApplicationResult<AuthResponse>> Handle(RegisterRequest request, CancellationToken cancellationToken)
     {
@@ -26,14 +25,7 @@ public sealed class RegisterCommandHandler(
 
         user = await repository.CreateUserAsync(user.FullName, user.Email, user.PasswordHash, cancellationToken);
 
-        var refreshToken = PasswordService.GenerateRefreshToken();
-        var refreshTokenHash = PasswordService.HashToken(refreshToken);
-        var sessionExpiresAt = timeProvider.GetUtcNow().AddDays(7);
-
-        var session = await repository.CreateSessionAsync(user.Id, refreshTokenHash, sessionExpiresAt, cancellationToken);
-
-        var accessToken = jwtService.CreateAccessToken(user, session);
-        var response = new AuthResponse(accessToken.Token, accessToken.ExpiresAt, refreshToken, session.ExpiresAt, session.PublicId);
+        var response = await authSessions.CreateSessionAsync(user, cancellationToken);
 
         return ApplicationResult<AuthResponse>.Ok(response, "Registration successful");
     }

@@ -13,11 +13,11 @@ import { SearchBar } from "./search-bar"
 import { DestinationCard } from "./destination-card"
 import { StayCard } from "./stay-card"
 import {
-  CATEGORIES,
-  DESTINATIONS,
-  FEATURED_STAYS,
-  POPULAR_SEARCHES,
-} from "../data/home-data"
+  DEMO_CATEGORIES,
+  DEMO_DESTINATIONS,
+  DEMO_FEATURED_STAYS,
+  DEMO_POPULAR_SEARCHES,
+} from "../data/home-demo-data"
 import type { SearchCriteria } from "../types/home"
 
 export function HomePage() {
@@ -76,7 +76,7 @@ export function HomePage() {
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
             <span className="text-xs text-muted-foreground">Popular:</span>
-            {POPULAR_SEARCHES.map((place) => (
+            {DEMO_POPULAR_SEARCHES.map((place) => (
               <Button
                 key={place}
                 variant="outline"
@@ -93,7 +93,7 @@ export function HomePage() {
 
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2 overflow-x-auto pb-2">
-          {CATEGORIES.map((cat) => (
+          {DEMO_CATEGORIES.map((cat) => (
             <button
               key={cat.name}
               onClick={() => setActiveCategory(cat.name)}
@@ -128,7 +128,7 @@ export function HomePage() {
         </div>
 
         <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
-          {DESTINATIONS.map((dest) => (
+          {DEMO_DESTINATIONS.map((dest) => (
             <DestinationCard key={dest.name} destination={dest} />
           ))}
         </div>
@@ -151,7 +151,7 @@ export function HomePage() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
-          {FEATURED_STAYS.map((stay) => (
+          {DEMO_FEATURED_STAYS.map((stay) => (
             <StayCard key={stay.name} stay={stay} />
           ))}
         </div>

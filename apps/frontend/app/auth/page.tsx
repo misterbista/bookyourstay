@@ -1,4 +1,4 @@
-import { AuthWorkspace } from "@/features/auth/auth-workspace"
+import { AuthWorkspace } from "@/features/auth/components/auth-workspace"
 
 export default function AuthPage() {
   return <AuthWorkspace />

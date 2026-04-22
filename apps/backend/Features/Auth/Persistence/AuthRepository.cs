@@ -4,7 +4,7 @@ using System.Data;
 
 namespace backend.Features.Auth.Persistence;
 
-public sealed class AuthRepository(IDbConnection connection)
+public sealed class AuthRepository(IDbConnection connection) : IAuthRepository
 {
     private IDbConnection Connection => connection;
 

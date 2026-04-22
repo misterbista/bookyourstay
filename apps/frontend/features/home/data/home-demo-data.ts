@@ -7,7 +7,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import type { Category, Destination, Stay } from "../types/home"
 
-export const DESTINATIONS: Destination[] = [
+export const DEMO_DESTINATIONS: Destination[] = [
   {
     name: "Bali, Indonesia",
     tagline: "Tropical paradise",
@@ -38,7 +38,7 @@ export const DESTINATIONS: Destination[] = [
   },
 ] as const
 
-export const FEATURED_STAYS: Stay[] = [
+export const DEMO_FEATURED_STAYS: Stay[] = [
   {
     name: "The Coral Villa",
     location: "Bali, Indonesia",
@@ -102,7 +102,7 @@ export const FEATURED_STAYS: Stay[] = [
   },
 ] as const
 
-export const CATEGORIES: Category[] = [
+export const DEMO_CATEGORIES: Category[] = [
   {
     name: "All",
     icon: MapsGlobal01Icon,
@@ -130,7 +130,7 @@ export const CATEGORIES: Category[] = [
   },
 ] as const
 
-export const POPULAR_SEARCHES = [
+export const DEMO_POPULAR_SEARCHES = [
   "Bali villas",
   "Paris apartments",
   "Tokyo hotels",

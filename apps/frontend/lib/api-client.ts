@@ -1,4 +1,4 @@
-import type { ApiFailure, ApiSuccess } from "@bookyourstay/shared"
+import type { ApiSuccess } from "@bookyourstay/shared"
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ??
@@ -51,37 +51,32 @@ export async function apiRequest<T>(
 
   if (!response.ok) {
     const message =
-      payload && "message" in payload && typeof payload.message === "string"
+      isRecord(payload) && typeof payload.message === "string"
         ? payload.message
         : "Request failed."
 
     throw new ApiClientError(message, response.status, normalizeErrors(payload))
   }
 
-  if (
-    !payload ||
-    typeof payload !== "object" ||
-    !("success" in payload) ||
-    payload.success !== true
-  ) {
+  if (!isApiSuccess<T>(payload)) {
     throw new ApiClientError("Unexpected API response.", response.status)
   }
 
-  return payload as ApiSuccess<T>
+  return payload
 }
 
 function normalizeErrors(payload: unknown): Record<string, string[]> {
-  if (
-    typeof payload === "object" &&
-    payload !== null &&
-    "errors" in payload &&
-    typeof payload.errors === "object" &&
-    payload.errors !== null
-  ) {
-    return payload.errors as Record<string, string[]>
+  if (!isRecord(payload) || !isRecord(payload.errors)) {
+    return {}
   }
 
-  return {}
+  return Object.fromEntries(
+    Object.entries(payload.errors).filter(
+      (entry): entry is [string, string[]] =>
+        Array.isArray(entry[1]) &&
+        entry[1].every((value) => typeof value === "string")
+    )
+  )
 }
 
 async function parseJson(response: Response) {
@@ -89,8 +84,21 @@ async function parseJson(response: Response) {
   if (!text) return null
 
   try {
-    return JSON.parse(text) as ApiSuccess<unknown> | ApiFailure
+    return JSON.parse(text) as unknown
   } catch {
     return null
   }
+}
+
+function isApiSuccess<T>(value: unknown): value is ApiSuccess<T> {
+  return (
+    isRecord(value) &&
+    value.success === true &&
+    typeof value.message === "string" &&
+    "data" in value
+  )
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null
 }

@@ -13,7 +13,7 @@ public sealed class CookieAccessTokenAuthenticationHandler(
     UrlEncoder encoder,
     AuthCookieService authCookies,
     JwtService jwtService,
-    AuthRepository repository)
+    IAuthRepository repository)
     : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
 {
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -40,8 +40,8 @@ public sealed class CookieAccessTokenAuthenticationHandler(
             new Claim(ClaimTypes.NameIdentifier, user.PublicId.ToString()),
             new Claim(ClaimTypes.Name, user.FullName),
             new Claim(ClaimTypes.Email, user.Email),
-            new Claim("uid", user.Id.ToString()),
-            new Claim("sid", payload.SessionPublicId.ToString())
+            new Claim(AuthClaims.UserId, user.Id.ToString()),
+            new Claim(AuthClaims.SessionId, payload.SessionPublicId.ToString())
         };
 
         var identity = new ClaimsIdentity(claims, Scheme.Name);

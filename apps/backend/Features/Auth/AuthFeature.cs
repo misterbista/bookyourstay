@@ -21,10 +21,11 @@ public static class AuthFeature
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        services.AddScoped<AuthRepository>();
+        services.AddScoped<IAuthRepository, AuthRepository>();
         services.AddSingleton<JwtService>();
         services.AddSingleton<PasswordService>();
         services.AddSingleton<AuthCookieService>();
+        services.AddScoped<AuthSessionService>();
         services.AddScoped<LoginCommandHandler>();
         services.AddScoped<LogoutCommandHandler>();
         services.AddScoped<RefreshCommandHandler>();

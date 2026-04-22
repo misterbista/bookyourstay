@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Http;
 namespace backend.Features.Auth.Commands.Logout;
 
 public sealed class LogoutCommandHandler(
-    AuthRepository repository,
+    IAuthRepository repository,
     JwtService jwtService,
     AuthCookieService authCookies,
     IHttpContextAccessor httpContextAccessor)

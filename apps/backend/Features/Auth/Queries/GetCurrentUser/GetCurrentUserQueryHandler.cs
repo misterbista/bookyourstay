@@ -4,12 +4,12 @@ using Microsoft.AspNetCore.Http;
 namespace backend.Features.Auth.Queries.GetCurrentUser;
 
 public sealed class GetCurrentUserQueryHandler(
-    AuthRepository repository,
+    IAuthRepository repository,
     IHttpContextAccessor httpContextAccessor)
 {
     public async Task<ApplicationResult<CurrentUserResponse>> Handle(GetCurrentUserRequest request, CancellationToken cancellationToken)
     {
-        var sessionClaim = httpContextAccessor.HttpContext?.User.FindFirst("sid")?.Value;
+        var sessionClaim = httpContextAccessor.HttpContext?.User.FindFirst(AuthClaims.SessionId)?.Value;
         if (!Guid.TryParse(sessionClaim, out var sessionPublicId))
         {
             return ApplicationResult<CurrentUserResponse>.Unauthorized("Authentication required", new Dictionary<string, string[]> { ["auth"] = ["A valid authenticated session is required"] });

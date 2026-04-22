@@ -46,8 +46,8 @@ public sealed class JwtService
         Claim[] claims =
         {
             new(JwtRegisteredClaimNames.Sub, user.PublicId.ToString()),
-            new("uid", user.Id.ToString()),
-            new("sid", session.PublicId.ToString())
+            new(AuthClaims.UserId, user.Id.ToString()),
+            new(AuthClaims.SessionId, session.PublicId.ToString())
         };
 
         var descriptor = new SecurityTokenDescriptor
@@ -71,8 +71,8 @@ public sealed class JwtService
         {
             var principal = _tokenHandler.ValidateToken(token, _validationParameters, out _);
 
-            var userIdClaim = principal.FindFirst("uid")?.Value;
-            var sessionIdClaim = principal.FindFirst("sid")?.Value;
+            var userIdClaim = principal.FindFirst(AuthClaims.UserId)?.Value;
+            var sessionIdClaim = principal.FindFirst(AuthClaims.SessionId)?.Value;
             var subjectClaim = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
 
             if (!long.TryParse(userIdClaim, out var userId) ||

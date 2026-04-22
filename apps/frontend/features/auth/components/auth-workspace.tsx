@@ -4,11 +4,11 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { SiteNavbar } from "@/shared/layout/site-navbar"
 import { cn } from "@/lib/utils"
-import { useAuth } from "./hooks/use-auth"
-import { FeedbackBanner } from "./components/feedback-banner"
-import { LoginForm } from "./components/login-form"
-import { RegisterForm } from "./components/register-form"
-import { UserProfile } from "./components/user-profile"
+import { useAuth } from "../hooks/use-auth"
+import { FeedbackBanner } from "./feedback-banner"
+import { LoginForm } from "./login-form"
+import { RegisterForm } from "./register-form"
+import { UserProfile } from "./user-profile"
 
 const AUTH_COPY = {
   login: {

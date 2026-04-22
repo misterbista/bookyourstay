@@ -7,10 +7,9 @@ using Microsoft.AspNetCore.Identity;
 namespace backend.Features.Auth.Commands.Login;
 
 public sealed class LoginCommandHandler(
-    AuthRepository repository,
+    IAuthRepository repository,
     PasswordService passwordService,
-    JwtService jwtService,
-    TimeProvider timeProvider)
+    AuthSessionService authSessions)
 {
     public async Task<ApplicationResult<AuthResponse>> Handle(LoginRequest request, CancellationToken cancellationToken)
     {
@@ -25,14 +24,7 @@ public sealed class LoginCommandHandler(
             return InvalidCredentials();
         }
 
-        var refreshToken = PasswordService.GenerateRefreshToken();
-        var refreshTokenHash = PasswordService.HashToken(refreshToken);
-        var sessionExpiresAt = timeProvider.GetUtcNow().AddDays(7);
-
-        var session = await repository.CreateSessionAsync(user.Id, refreshTokenHash, sessionExpiresAt, cancellationToken);
-
-        var accessToken = jwtService.CreateAccessToken(user, session);
-        var response = new AuthResponse(accessToken.Token, accessToken.ExpiresAt, refreshToken, session.ExpiresAt, session.PublicId);
+        var response = await authSessions.CreateSessionAsync(user, cancellationToken);
 
         return ApplicationResult<AuthResponse>.Ok(response, "Login successful");
     }

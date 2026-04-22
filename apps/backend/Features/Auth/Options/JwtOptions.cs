@@ -14,4 +14,6 @@ public sealed class JwtOptions
     public required string SecretKey { get; init; }
     [Range(1, 1440)]
     public required int AccessTokenLifetimeMinutes { get; init; }
+    [Range(1, 365)]
+    public int RefreshTokenLifetimeDays { get; init; } = 7;
 }
