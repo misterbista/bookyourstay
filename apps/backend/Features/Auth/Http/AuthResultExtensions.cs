@@ -29,7 +29,7 @@ public static class AuthResultExtensions
         var response = new AuthSessionResponse(result.Data.SessionId);
         return controller.StatusCode(
             result.StatusCode,
-            new ApiResponse<AuthSessionResponse>(true, result.Message, response, result.Meta));
+            new ApiResponse<AuthSessionResponse>(true, result.Message, response));
     }
 }
 

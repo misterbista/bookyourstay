@@ -9,7 +9,6 @@ import { apiRequest } from "@/lib/api-client"
 const endpoints = {
   register: "/auth/register",
   login: "/auth/login",
-  refresh: "/auth/refresh",
   logout: "/auth/logout",
   currentUser: "/auth/me",
 } as const

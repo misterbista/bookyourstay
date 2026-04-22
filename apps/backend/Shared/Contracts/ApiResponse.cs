@@ -3,8 +3,7 @@ namespace backend.Shared.Contracts;
 public sealed record ApiResponse<T>(
     bool Success,
     string Message,
-    T? Data = default,
-    object? Meta = null);
+    T? Data = default);
 
 public sealed record ApiErrorResponse(
     bool Success,

@@ -17,15 +17,18 @@ public sealed class AuthService(
     {
         if (await repository.EmailExistsAsync(request.Email, cancellationToken))
         {
-            return ApplicationResult<AuthResponse>.BadRequest("Registration failed", new Dictionary<string, string[]>
-            {
-                ["email"] = ["Email already exists"]
-            });
+            return ApplicationResult<AuthResponse>.BadRequest(
+                "Registration failed",
+                new Dictionary<string, string[]> { ["email"] = ["Email already exists"] });
         }
 
         var user = new User { FullName = request.FullName, Email = request.Email };
         var passwordHash = passwords.HashPassword(user, request.Password);
-        var savedUser = await repository.CreateUserAsync(user.FullName, user.Email, passwordHash, cancellationToken);
+        var savedUser = await repository.CreateUserAsync(
+            user.FullName,
+            user.Email,
+            passwordHash,
+            cancellationToken);
         var response = await sessions.CreateSessionAsync(savedUser, cancellationToken);
 
         return ApplicationResult<AuthResponse>.Ok(response, "Registration successful");
@@ -52,19 +55,17 @@ public sealed class AuthService(
     {
         if (string.IsNullOrWhiteSpace(refreshToken))
         {
-            return ApplicationResult<AuthResponse>.Unauthorized("No refresh token", new Dictionary<string, string[]>
-            {
-                ["token"] = ["Refresh token not found in cookies"]
-            });
+            return ApplicationResult<AuthResponse>.Unauthorized(
+                "No refresh token",
+                new Dictionary<string, string[]> { ["token"] = ["Refresh token not found in cookies"] });
         }
 
         var response = await sessions.RotateSessionAsync(refreshToken, cancellationToken);
         if (response is null)
         {
-            return ApplicationResult<AuthResponse>.Unauthorized("Token refresh failed", new Dictionary<string, string[]>
-            {
-                ["token"] = ["Invalid or expired refresh token"]
-            });
+            return ApplicationResult<AuthResponse>.Unauthorized(
+                "Token refresh failed",
+                new Dictionary<string, string[]> { ["token"] = ["Invalid or expired refresh token"] });
         }
 
         return ApplicationResult<AuthResponse>.Ok(response, "Token refreshed");
@@ -89,19 +90,17 @@ public sealed class AuthService(
     {
         if (sessionPublicId is null)
         {
-            return ApplicationResult<CurrentUserResponse>.Unauthorized("Authentication required", new Dictionary<string, string[]>
-            {
-                ["auth"] = ["A valid authenticated session is required"]
-            });
+            return ApplicationResult<CurrentUserResponse>.Unauthorized(
+                "Authentication required",
+                new Dictionary<string, string[]> { ["auth"] = ["A valid authenticated session is required"] });
         }
 
         var user = await repository.GetUserBySessionAsync(sessionPublicId.Value, cancellationToken);
         if (user is null)
         {
-            return ApplicationResult<CurrentUserResponse>.Unauthorized("Session expired", new Dictionary<string, string[]>
-            {
-                ["session"] = ["Session has expired"]
-            });
+            return ApplicationResult<CurrentUserResponse>.Unauthorized(
+                "Session expired",
+                new Dictionary<string, string[]> { ["session"] = ["Session has expired"] });
         }
 
         var response = new CurrentUserResponse(
@@ -117,10 +116,9 @@ public sealed class AuthService(
     }
 
     private static ApplicationResult<AuthResponse> InvalidCredentials() =>
-        ApplicationResult<AuthResponse>.Unauthorized("Login failed", new Dictionary<string, string[]>
-        {
-            ["credentials"] = ["Invalid email or password"]
-        });
+        ApplicationResult<AuthResponse>.Unauthorized(
+            "Login failed",
+            new Dictionary<string, string[]> { ["credentials"] = ["Invalid email or password"] });
 }
 
 public sealed record CurrentUserResponse(

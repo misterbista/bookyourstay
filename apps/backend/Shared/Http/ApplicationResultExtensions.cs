@@ -11,7 +11,7 @@ public static class ApplicationResultExtensions
         {
             return controller.StatusCode(
                 result.StatusCode,
-                new ApiResponse<object?>(true, result.Message, null, result.Meta));
+                new ApiResponse<object?>(true, result.Message));
         }
 
         return controller.StatusCode(
@@ -25,7 +25,7 @@ public static class ApplicationResultExtensions
         {
             return controller.StatusCode(
                 result.StatusCode,
-                new ApiResponse<T>(true, result.Message, result.Data, result.Meta));
+                new ApiResponse<T>(true, result.Message, result.Data));
         }
 
         return controller.StatusCode(

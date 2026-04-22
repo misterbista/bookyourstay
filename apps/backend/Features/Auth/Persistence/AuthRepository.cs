@@ -6,12 +6,10 @@ namespace backend.Features.Auth.Persistence;
 
 public sealed class AuthRepository(IDbConnection connection) : IAuthRepository
 {
-    private IDbConnection Connection => connection;
-
     public async Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken)
     {
         const string sql = "SELECT EXISTS(SELECT 1 FROM iam.users WHERE email = @Email AND deleted_at IS NULL)";
-        return await Connection.ExecuteScalarAsync<bool>(new CommandDefinition(sql, new { Email = email }, cancellationToken: cancellationToken));
+        return await connection.ExecuteScalarAsync<bool>(new CommandDefinition(sql, new { Email = email }, cancellationToken: cancellationToken));
     }
 
     public async Task<User?> GetUserByEmailAsync(string email, CancellationToken cancellationToken)
@@ -22,7 +20,7 @@ public sealed class AuthRepository(IDbConnection connection) : IAuthRepository
             JOIN iam.user_identities ui ON ui.user_id = u.id AND ui.provider = 'local'
             WHERE u.email = @Email AND u.deleted_at IS NULL
             """;
-        return await Connection.QuerySingleOrDefaultAsync<User>(new CommandDefinition(sql, new { Email = email }, cancellationToken: cancellationToken));
+        return await connection.QuerySingleOrDefaultAsync<User>(new CommandDefinition(sql, new { Email = email }, cancellationToken: cancellationToken));
     }
 
     public async Task<User> CreateUserAsync(string fullName, string email, string passwordHash, CancellationToken cancellationToken)
@@ -43,7 +41,7 @@ public sealed class AuthRepository(IDbConnection connection) : IAuthRepository
             FROM new_user nu
             CROSS JOIN new_identity ni
             """;
-        return await Connection.QuerySingleAsync<User>(new CommandDefinition(sql, new { FullName = fullName, Email = email, PasswordHash = passwordHash }, cancellationToken: cancellationToken));
+        return await connection.QuerySingleAsync<User>(new CommandDefinition(sql, new { FullName = fullName, Email = email, PasswordHash = passwordHash }, cancellationToken: cancellationToken));
     }
 
     public async Task<Session> CreateSessionAsync(long userId, string refreshTokenHash, DateTimeOffset expiresAt, CancellationToken cancellationToken)
@@ -53,7 +51,7 @@ public sealed class AuthRepository(IDbConnection connection) : IAuthRepository
             VALUES (@UserId, @RefreshTokenHash, @ExpiresAt)
             RETURNING id, public_id, user_id, refresh_token_hash, expires_at, created_at
             """;
-        return await Connection.QuerySingleAsync<Session>(new CommandDefinition(sql, new { UserId = userId, RefreshTokenHash = refreshTokenHash, ExpiresAt = expiresAt }, cancellationToken: cancellationToken));
+        return await connection.QuerySingleAsync<Session>(new CommandDefinition(sql, new { UserId = userId, RefreshTokenHash = refreshTokenHash, ExpiresAt = expiresAt }, cancellationToken: cancellationToken));
     }
 
     public async Task<(User User, Session Session)?> RotateSessionAsync(string oldRefreshTokenHash, string newRefreshTokenHash, DateTimeOffset newExpiresAt, CancellationToken cancellationToken)
@@ -78,7 +76,7 @@ public sealed class AuthRepository(IDbConnection connection) : IAuthRepository
             JOIN updated_session s ON s.user_id = u.id
             """;
 
-        var result = await Connection.QueryAsync<User, Session, (User, Session)>(
+        var result = await connection.QueryAsync<User, Session, (User, Session)>(
             new CommandDefinition(sql, new { OldRefreshTokenHash = oldRefreshTokenHash, NewRefreshTokenHash = newRefreshTokenHash, NewExpiresAt = newExpiresAt }, cancellationToken: cancellationToken),
             (user, session) => (user, session));
 
@@ -93,7 +91,7 @@ public sealed class AuthRepository(IDbConnection connection) : IAuthRepository
             JOIN iam.user_sessions s ON s.user_id = u.id
             WHERE s.public_id = @SessionPublicId AND s.expires_at > NOW() AND s.revoked_at IS NULL AND u.deleted_at IS NULL
             """;
-        return await Connection.QuerySingleOrDefaultAsync<User>(new CommandDefinition(sql, new { SessionPublicId = sessionPublicId }, cancellationToken: cancellationToken));
+        return await connection.QuerySingleOrDefaultAsync<User>(new CommandDefinition(sql, new { SessionPublicId = sessionPublicId }, cancellationToken: cancellationToken));
     }
 
     public async Task<bool> RevokeSessionAsync(Guid sessionPublicId, CancellationToken cancellationToken)
@@ -103,7 +101,7 @@ public sealed class AuthRepository(IDbConnection connection) : IAuthRepository
             SET revoked_at = NOW(), expires_at = NOW(), revoke_reason = 'logout'
             WHERE public_id = @SessionPublicId AND revoked_at IS NULL
             """;
-        var affected = await Connection.ExecuteAsync(new CommandDefinition(sql, new { SessionPublicId = sessionPublicId }, cancellationToken: cancellationToken));
+        var affected = await connection.ExecuteAsync(new CommandDefinition(sql, new { SessionPublicId = sessionPublicId }, cancellationToken: cancellationToken));
         return affected > 0;
     }
 }
