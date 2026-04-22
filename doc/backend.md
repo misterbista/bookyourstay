@@ -39,3 +39,6 @@ dotnet test apps/backend/tests/backend.IntegrationTests/backend.IntegrationTests
 - Shared backend primitives stay in `Shared/`; feature-specific helpers stay inside the feature.
 - The backend intentionally uses Dapper and direct handlers. Avoid adding mediator or ORM packages unless the codebase has a concrete need.
 - Auth cookie names, protection, and expiry behavior are centralized in `AuthCookieService`.
+- Auth endpoints that issue cookies use the shared auth result mapper instead of controller-local response helpers.
+- Feature route segments live beside the feature controller, for example `AuthRoutes`.
+- Protected API routes use standard ASP.NET Core `[Authorize]` with the auth feature's cookie access-token scheme.

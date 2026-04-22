@@ -1,30 +1,21 @@
 using backend.Features.Auth.Persistence;
-using backend.Features.Auth.Services;
 using Microsoft.AspNetCore.Http;
 
 namespace backend.Features.Auth.Queries.GetCurrentUser;
 
 public sealed class GetCurrentUserQueryHandler(
     AuthRepository repository,
-    JwtService jwtService,
-    AuthCookieService authCookies,
     IHttpContextAccessor httpContextAccessor)
 {
     public async Task<ApplicationResult<CurrentUserResponse>> Handle(GetCurrentUserRequest request, CancellationToken cancellationToken)
     {
-        var httpContext = httpContextAccessor.HttpContext;
-        var accessToken = httpContext is null ? null : authCookies.GetAccessToken(httpContext);
-        if (string.IsNullOrWhiteSpace(accessToken))
+        var sessionClaim = httpContextAccessor.HttpContext?.User.FindFirst("sid")?.Value;
+        if (!Guid.TryParse(sessionClaim, out var sessionPublicId))
         {
-            return ApplicationResult<CurrentUserResponse>.Unauthorized("No access token", new Dictionary<string, string[]> { ["token"] = ["Access token not found in cookies"] });
+            return ApplicationResult<CurrentUserResponse>.Unauthorized("Authentication required", new Dictionary<string, string[]> { ["auth"] = ["A valid authenticated session is required"] });
         }
 
-        if (!jwtService.TryValidateAccessToken(accessToken, out var payload))
-        {
-            return ApplicationResult<CurrentUserResponse>.Unauthorized("Invalid token", new Dictionary<string, string[]> { ["token"] = ["Invalid access token"] });
-        }
-
-        var user = await repository.GetUserBySessionAsync(payload.SessionPublicId, cancellationToken);
+        var user = await repository.GetUserBySessionAsync(sessionPublicId, cancellationToken);
         if (user is null)
         {
             return ApplicationResult<CurrentUserResponse>.Unauthorized("Session expired", new Dictionary<string, string[]> { ["session"] = ["Session has expired"] });

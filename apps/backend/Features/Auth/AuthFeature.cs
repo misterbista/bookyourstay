@@ -5,7 +5,9 @@ using backend.Features.Auth.Commands.Register;
 using backend.Features.Auth.Options;
 using backend.Features.Auth.Persistence;
 using backend.Features.Auth.Queries.GetCurrentUser;
+using backend.Features.Auth.Security;
 using backend.Features.Auth.Services;
+using Microsoft.AspNetCore.Authentication;
 
 namespace backend.Features.Auth;
 
@@ -28,6 +30,14 @@ public static class AuthFeature
         services.AddScoped<RefreshCommandHandler>();
         services.AddScoped<RegisterCommandHandler>();
         services.AddScoped<GetCurrentUserQueryHandler>();
+
+        services
+            .AddAuthentication(AuthSchemes.CookieAccessToken)
+            .AddScheme<AuthenticationSchemeOptions, CookieAccessTokenAuthenticationHandler>(
+                AuthSchemes.CookieAccessToken,
+                _ => { });
+
+        services.AddAuthorization();
 
         return services;
     }

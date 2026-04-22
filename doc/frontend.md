@@ -45,6 +45,7 @@ apps/frontend/
 
 - Path aliases use `@/*`.
 - Cross-app types and utilities come from `@bookyourstay/shared`.
-- Feature-specific API clients live under the owning feature, not `lib/`.
+- Generic API request behavior lives in `lib/api-client.ts`; feature-specific endpoints live under the owning feature.
+- Feature endpoint paths live beside feature API functions, for example `features/auth/api/auth-endpoints.ts`.
 - Global styles live in `app/globals.css`.
 - Shared utility helpers live in `lib/utils.ts`.
