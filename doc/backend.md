@@ -35,9 +35,9 @@ dotnet test apps/backend/tests/backend.IntegrationTests/backend.IntegrationTests
 
 - Startup migrations run automatically in normal environments.
 - Integration tests disable startup migrations with `Database:RunMigrationsOnStartup=false`.
-- The current architecture is feature-first: controllers, commands, queries, domain objects, services, registration, and persistence live inside the owning feature.
+- The current architecture is feature-first: controllers, domain objects, services, registration, and persistence live inside the owning feature.
 - Shared backend primitives stay in `Shared/`; feature-specific helpers stay inside the feature.
-- The backend intentionally uses Dapper and direct handlers. Avoid adding mediator or ORM packages unless the codebase has a concrete need.
+- The backend intentionally uses Dapper and direct feature services. Avoid adding mediator or ORM packages unless the codebase has a concrete need.
 - Auth cookie names, protection, and expiry behavior are centralized in `AuthCookieService`.
 - Auth endpoints that issue cookies use the shared auth result mapper instead of controller-local response helpers.
 - Feature route strings live on the controller until multiple controllers need to share them.

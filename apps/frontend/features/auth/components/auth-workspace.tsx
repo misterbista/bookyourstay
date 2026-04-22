@@ -1,10 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { SiteNavbar } from "@/shared/layout/site-navbar"
 import { cn } from "@/lib/utils"
-import { useAuth } from "../hooks/use-auth"
+import { ApiClientError } from "@/lib/api-client"
+import { getCurrentUser } from "../api/auth-api"
+import type { AuthMode, CurrentUser, FeedbackState } from "../types/auth"
 import { FeedbackBanner } from "./feedback-banner"
 import { LoginForm } from "./login-form"
 import { RegisterForm } from "./register-form"
@@ -22,19 +24,41 @@ const AUTH_COPY = {
 } as const
 
 export function AuthWorkspace() {
-  const {
-    authMode,
-    setAuthMode,
-    currentUser,
-    feedback,
-    setFeedback,
-    clearFeedback,
-    isLoading,
-    setCurrentUser,
-    loadCurrentUser,
-  } = useAuth()
-
+  const [authMode, setAuthMode] = useState<AuthMode>("login")
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
+  const [feedback, setFeedback] = useState<FeedbackState | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const loadCurrentUser = useCallback(async () => {
+    try {
+      const result = await getCurrentUser()
+      setCurrentUser(result.data)
+      setFeedback({
+        tone: "success",
+        title: "Welcome back!",
+        body: `Hello, ${result.data.fullName}!`,
+      })
+    } catch (error) {
+      if (error instanceof ApiClientError && error.status === 401) {
+        setCurrentUser(null)
+      } else {
+        setFeedback({
+          tone: "error",
+          title: "Failed to load user",
+          body: "Unable to verify your authentication status.",
+        })
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void loadCurrentUser()
+  }, [loadCurrentUser])
+
+  const clearFeedback = () => setFeedback(null)
 
   const handleAuthSuccess = async () => {
     await loadCurrentUser()

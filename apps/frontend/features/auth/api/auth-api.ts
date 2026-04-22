@@ -4,9 +4,7 @@ import type {
   LoginPayload,
   RegisterPayload,
 } from "../types/auth"
-import { apiRequest, ApiClientError } from "@/lib/api-client"
-
-export { ApiClientError }
+import { apiRequest } from "@/lib/api-client"
 
 const endpoints = {
   register: "/auth/register",
@@ -27,12 +25,6 @@ export function login(payload: LoginPayload) {
   return apiRequest<AuthSession>(endpoints.login, {
     method: "POST",
     body: JSON.stringify(payload),
-  })
-}
-
-export function refreshSession() {
-  return apiRequest<AuthSession>(endpoints.refresh, {
-    method: "POST",
   })
 }
 

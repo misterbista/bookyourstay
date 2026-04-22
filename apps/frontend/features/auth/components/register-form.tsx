@@ -13,8 +13,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { ApiClientError, register } from "../api/auth-api"
-import { flattenErrors } from "@/lib/api-client"
+import { register } from "../api/auth-api"
+import { ApiClientError, flattenErrors } from "@/lib/api-client"
 import type { RegisterPayload, FeedbackState } from "../types/auth"
 
 const registerSchema = z.object({

@@ -3,7 +3,8 @@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { ApiClientError, logout } from "../api/auth-api"
+import { logout } from "../api/auth-api"
+import { ApiClientError } from "@/lib/api-client"
 import type { CurrentUser, FeedbackState } from "../types/auth"
 
 interface UserProfileProps {

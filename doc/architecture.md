@@ -35,7 +35,7 @@ The backend is feature-first with a thin composition root.
 
 ```text
 apps/backend/Program.cs                 host setup and cross-cutting services
-apps/backend/Features/<Feature>/        controller, commands, queries, domain, services, persistence
+apps/backend/Features/<Feature>/        controller, domain, services, persistence
 apps/backend/Shared/                    backend primitives used by multiple features
 apps/backend/Database/Migrations/       runtime SQL migrations
 apps/backend/tests/                     unit and integration tests
@@ -45,7 +45,7 @@ Each feature owns its registration through a small feature extension such as `Ad
 
 Data access uses Dapper directly. Global Dapper conventions, such as snake_case column mapping, are configured once in `Program.cs`; repositories should stay focused on SQL and mapping results.
 
-Authentication cookies are owned by the auth feature through `AuthCookieService`. Controllers and handlers should depend on that service instead of reading protected cookies through extension methods or service-location.
+Authentication cookies are owned by the auth feature through `AuthCookieService`. Controllers read HTTP cookies and claims at the boundary, then pass plain values into feature services.
 
 Auth endpoints that issue cookies should use the auth feature's `ToAuthActionResult` extension so token-cookie writes and public session responses stay consistent.
 
