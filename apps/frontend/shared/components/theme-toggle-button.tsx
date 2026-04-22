@@ -33,7 +33,7 @@ function ThemeToggleButton({
       variant={variant}
       size={size}
       className={className}
-      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label={mounted && isDark ? "Switch to light mode" : "Switch to dark mode"}
       onClick={() => setTheme(isDark ? "light" : "dark")}
     >
       <HugeiconsIcon

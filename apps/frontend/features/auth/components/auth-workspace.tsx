@@ -20,8 +20,7 @@ import {
 } from "@/lib/auth-api"
 import { cn } from "@/lib/utils"
 import { readStoredSession, persistSession } from "@/features/auth/lib/session-storage"
-import { BrandLogo } from "@/shared/components/brand-logo"
-import { ThemeToggleButton } from "@/shared/components/theme-toggle-button"
+import { Navbar } from "@/shared/components/navbar"
 
 type AuthMode = "login" | "register" | "recovery"
 
@@ -297,17 +296,7 @@ function AuthWorkspace() {
   return (
     <main className="min-h-svh bg-background">
       <div className="mx-auto flex min-h-svh w-full max-w-7xl flex-col">
-        <header className="flex items-center justify-between px-6 py-4 sm:px-10">
-          <BrandLogo
-            className="h-20 w-72 sm:h-24 sm:w-[24rem]"
-            sizes="(min-width: 640px) 384px, 288px"
-            priority
-          />
-          <ThemeToggleButton
-            variant="outline"
-            className="rounded-xl border-border/60 bg-background/80 text-muted-foreground hover:bg-muted hover:text-foreground"
-          />
-        </header>
+        <Navbar variant="auth" />
 
         <div className="flex flex-1 items-center justify-center px-6 pb-10 sm:px-10">
           <div className="w-full max-w-[460px] space-y-8">
