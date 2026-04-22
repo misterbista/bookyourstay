@@ -40,8 +40,8 @@ public sealed class CookieAccessTokenAuthenticationHandler(
             new Claim(ClaimTypes.NameIdentifier, user.PublicId.ToString()),
             new Claim(ClaimTypes.Name, user.FullName),
             new Claim(ClaimTypes.Email, user.Email),
-            new Claim(AuthClaims.UserId, user.Id.ToString()),
-            new Claim(AuthClaims.SessionId, payload.SessionPublicId.ToString())
+            new Claim(JwtService.UserIdClaim, user.Id.ToString()),
+            new Claim(JwtService.SessionIdClaim, payload.SessionPublicId.ToString())
         };
 
         var identity = new ClaimsIdentity(claims, Scheme.Name);

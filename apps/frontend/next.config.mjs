@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ["@bookyourstay/shared"],
   images: {
     remotePatterns: [
       {

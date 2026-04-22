@@ -7,10 +7,9 @@ This repo is a small polyglot monorepo. Keep it boring, explicit, and feature-fi
 ```text
 apps/backend      ASP.NET Core API and backend tests
 apps/frontend     Next.js app
-packages/shared   TypeScript contracts and tiny framework-agnostic utilities
 ```
 
-Do not put app-specific code in `packages/shared`. Shared code should be stable contracts, constants, or pure utilities used by more than one workspace.
+Do not add root packages until there is real same-language reuse across workspaces. The C# backend cannot consume TypeScript contracts directly, so frontend API shapes belong in the frontend unless generated contracts are introduced.
 
 ## Frontend
 
@@ -28,7 +27,7 @@ Feature-specific API clients live under the owning feature, for example `feature
 
 Shared frontend infrastructure, such as the generic HTTP client, belongs in `apps/frontend/lib`. Feature endpoints should wrap that infrastructure from inside the owning feature.
 
-Each frontend feature should keep endpoint path constants next to its API functions. Each backend feature should keep route segment constants next to its controller. That keeps URLs discoverable without introducing generated clients before the project needs them.
+Each frontend feature should keep endpoint path constants next to its API functions. Each backend feature should keep route strings on the controller until multiple controllers need to share them. That keeps URLs discoverable without introducing generated clients before the project needs them.
 
 ## Backend
 

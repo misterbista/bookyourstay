@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { ApiClientError, logout } from "../api/auth-api"
-import { formatDate } from "@bookyourstay/shared"
 import type { CurrentUser, FeedbackState } from "../types/auth"
 
 interface UserProfileProps {
@@ -110,4 +109,13 @@ export function UserProfile({
       </div>
     </div>
   )
+}
+
+function formatDate(value: string | null) {
+  if (!value) return "Not available"
+
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value))
 }

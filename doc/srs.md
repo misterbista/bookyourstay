@@ -518,7 +518,7 @@ The system data model is expected to include:
 
 - NFR-MAIN-001: the system should remain organized as a modular monolith in early phases
 - NFR-MAIN-002: backend code should follow feature-oriented boundaries
-- NFR-MAIN-003: the monorepo should preserve clear separation between apps and shared packages
+- NFR-MAIN-003: the monorepo should preserve clear app boundaries and add shared packages only when reuse is real
 
 ### 9.5 Usability
 

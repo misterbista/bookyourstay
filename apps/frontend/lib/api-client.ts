@@ -1,8 +1,21 @@
-import type { ApiSuccess } from "@bookyourstay/shared"
-
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ??
   "http://localhost:8080/api/v1"
+
+export type ApiSuccess<T> = {
+  success: true
+  message: string
+  data: T
+  meta?: unknown
+}
+
+export type ApiFailure = {
+  success: false
+  message: string
+  errors?: Record<string, string[]>
+}
+
+export type ApiResponse<T> = ApiSuccess<T> | ApiFailure
 
 export class ApiClientError extends Error {
   readonly status: number
@@ -22,6 +35,14 @@ export class ApiClientError extends Error {
 
 export function getApiBaseUrl() {
   return API_BASE_URL
+}
+
+export function flattenErrors(error: {
+  message: string
+  errors?: Record<string, string[]>
+}) {
+  const details = Object.values(error.errors ?? {}).flat().filter(Boolean)
+  return details.length > 0 ? details.join(" ") : error.message
 }
 
 export async function apiRequest<T>(

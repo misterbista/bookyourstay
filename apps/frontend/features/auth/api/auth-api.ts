@@ -3,38 +3,45 @@ import type {
   CurrentUser,
   LoginPayload,
   RegisterPayload,
-} from "@bookyourstay/shared"
+} from "../types/auth"
 import { apiRequest, ApiClientError, getApiBaseUrl } from "@/lib/api-client"
-import { AUTH_ENDPOINTS } from "./auth-endpoints"
 
 export { ApiClientError, getApiBaseUrl }
 
+const endpoints = {
+  register: "/auth/register",
+  login: "/auth/login",
+  refresh: "/auth/refresh",
+  logout: "/auth/logout",
+  currentUser: "/auth/me",
+} as const
+
 export function register(payload: RegisterPayload) {
-  return apiRequest<AuthSession>(AUTH_ENDPOINTS.register, {
+  return apiRequest<AuthSession>(endpoints.register, {
     method: "POST",
     body: JSON.stringify(payload),
   })
 }
 
 export function login(payload: LoginPayload) {
-  return apiRequest<AuthSession>(AUTH_ENDPOINTS.login, {
+  return apiRequest<AuthSession>(endpoints.login, {
     method: "POST",
     body: JSON.stringify(payload),
   })
 }
 
 export function refreshSession() {
-  return apiRequest<AuthSession>(AUTH_ENDPOINTS.refresh, {
+  return apiRequest<AuthSession>(endpoints.refresh, {
     method: "POST",
   })
 }
 
 export function logout() {
-  return apiRequest<null>(AUTH_ENDPOINTS.logout, {
+  return apiRequest<null>(endpoints.logout, {
     method: "POST",
   })
 }
 
 export function getCurrentUser() {
-  return apiRequest<CurrentUser>(AUTH_ENDPOINTS.currentUser, { method: "GET" })
+  return apiRequest<CurrentUser>(endpoints.currentUser, { method: "GET" })
 }

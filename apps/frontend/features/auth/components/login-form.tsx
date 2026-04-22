@@ -14,7 +14,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { ApiClientError, login } from "../api/auth-api"
-import { flattenErrors } from "@bookyourstay/shared"
+import { flattenErrors } from "@/lib/api-client"
 import type { LoginPayload, FeedbackState } from "../types/auth"
 
 const loginSchema = z.object({

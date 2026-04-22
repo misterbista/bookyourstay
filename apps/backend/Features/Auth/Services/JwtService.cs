@@ -10,6 +10,9 @@ namespace backend.Features.Auth.Services;
 
 public sealed class JwtService
 {
+    public const string UserIdClaim = "uid";
+    public const string SessionIdClaim = "sid";
+
     private readonly JwtOptions _options;
     private readonly TimeProvider _timeProvider;
     private readonly JwtSecurityTokenHandler _tokenHandler = new();
@@ -46,8 +49,8 @@ public sealed class JwtService
         Claim[] claims =
         {
             new(JwtRegisteredClaimNames.Sub, user.PublicId.ToString()),
-            new(AuthClaims.UserId, user.Id.ToString()),
-            new(AuthClaims.SessionId, session.PublicId.ToString())
+            new(UserIdClaim, user.Id.ToString()),
+            new(SessionIdClaim, session.PublicId.ToString())
         };
 
         var descriptor = new SecurityTokenDescriptor
@@ -71,8 +74,8 @@ public sealed class JwtService
         {
             var principal = _tokenHandler.ValidateToken(token, _validationParameters, out _);
 
-            var userIdClaim = principal.FindFirst(AuthClaims.UserId)?.Value;
-            var sessionIdClaim = principal.FindFirst(AuthClaims.SessionId)?.Value;
+            var userIdClaim = principal.FindFirst(UserIdClaim)?.Value;
+            var sessionIdClaim = principal.FindFirst(SessionIdClaim)?.Value;
             var subjectClaim = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
 
             if (!long.TryParse(userIdClaim, out var userId) ||

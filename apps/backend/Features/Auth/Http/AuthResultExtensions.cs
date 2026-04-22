@@ -32,3 +32,5 @@ public static class AuthResultExtensions
             new ApiResponse<AuthSessionResponse>(true, result.Message, response, result.Meta));
     }
 }
+
+public sealed record AuthSessionResponse(Guid SessionId);

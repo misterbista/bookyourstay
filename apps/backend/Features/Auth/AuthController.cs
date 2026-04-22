@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using backend.Features.Auth.Commands.Login;
 using backend.Features.Auth.Commands.Logout;
 using backend.Features.Auth.Commands.Refresh;
@@ -12,7 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace backend.Features.Auth;
 
 [ApiController]
-[Route(AuthRoutes.Base)]
+[Route("api/v1/auth")]
 public sealed class AuthController(
     RegisterCommandHandler register,
     LoginCommandHandler login,
@@ -21,28 +22,28 @@ public sealed class AuthController(
     GetCurrentUserQueryHandler getCurrentUser,
     AuthCookieService authCookies) : ControllerBase
 {
-    [HttpPost(AuthRoutes.Register)]
+    [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest request, CancellationToken cancellationToken)
     {
         var result = await register.Handle(request, cancellationToken);
         return this.ToAuthActionResult(result, authCookies);
     }
 
-    [HttpPost(AuthRoutes.Login)]
+    [HttpPost("login")]
     public async Task<IActionResult> Login(LoginRequest request, CancellationToken cancellationToken)
     {
         var result = await login.Handle(request, cancellationToken);
         return this.ToAuthActionResult(result, authCookies);
     }
 
-    [HttpPost(AuthRoutes.Refresh)]
+    [HttpPost("refresh")]
     public async Task<IActionResult> Refresh(CancellationToken cancellationToken)
     {
         var result = await refresh.Handle(new RefreshRequest(), cancellationToken);
         return this.ToAuthActionResult(result, authCookies);
     }
 
-    [HttpPost(AuthRoutes.Logout)]
+    [HttpPost("logout")]
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
         var result = await logout.Handle(new LogoutRequest(), cancellationToken);
@@ -54,10 +55,23 @@ public sealed class AuthController(
     }
 
     [Authorize]
-    [HttpGet(AuthRoutes.CurrentUser)]
+    [HttpGet("me")]
     public async Task<IActionResult> GetCurrentUser(CancellationToken cancellationToken)
     {
-        var result = await getCurrentUser.Handle(new GetCurrentUserRequest(), cancellationToken);
+        var result = await getCurrentUser.Handle(cancellationToken);
         return this.ToActionResult(result);
     }
 }
+
+public sealed record RegisterRequest(
+    [Required, MinLength(2), MaxLength(150)] string FullName,
+    [Required, EmailAddress, MaxLength(255)] string Email,
+    [Required, MinLength(8), MaxLength(200)] string Password);
+
+public sealed record LoginRequest(
+    [Required, EmailAddress, MaxLength(255)] string Email,
+    [Required, MinLength(1)] string Password);
+
+public sealed record RefreshRequest;
+
+public sealed record LogoutRequest;

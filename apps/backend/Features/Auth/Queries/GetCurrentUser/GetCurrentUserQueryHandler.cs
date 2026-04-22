@@ -1,4 +1,5 @@
 using backend.Features.Auth.Persistence;
+using backend.Features.Auth.Services;
 using Microsoft.AspNetCore.Http;
 
 namespace backend.Features.Auth.Queries.GetCurrentUser;
@@ -7,9 +8,9 @@ public sealed class GetCurrentUserQueryHandler(
     IAuthRepository repository,
     IHttpContextAccessor httpContextAccessor)
 {
-    public async Task<ApplicationResult<CurrentUserResponse>> Handle(GetCurrentUserRequest request, CancellationToken cancellationToken)
+    public async Task<ApplicationResult<CurrentUserResponse>> Handle(CancellationToken cancellationToken)
     {
-        var sessionClaim = httpContextAccessor.HttpContext?.User.FindFirst(AuthClaims.SessionId)?.Value;
+        var sessionClaim = httpContextAccessor.HttpContext?.User.FindFirst(JwtService.SessionIdClaim)?.Value;
         if (!Guid.TryParse(sessionClaim, out var sessionPublicId))
         {
             return ApplicationResult<CurrentUserResponse>.Unauthorized("Authentication required", new Dictionary<string, string[]> { ["auth"] = ["A valid authenticated session is required"] });
@@ -33,3 +34,12 @@ public sealed class GetCurrentUserQueryHandler(
         return ApplicationResult<CurrentUserResponse>.Ok(response, "Current user retrieved");
     }
 }
+
+public sealed record CurrentUserResponse(
+    Guid Id,
+    string FullName,
+    string Email,
+    string Status,
+    DateTimeOffset? EmailVerifiedAt,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? LastLoginAt);

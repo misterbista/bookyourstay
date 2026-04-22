@@ -13,6 +13,8 @@ namespace backend.Features.Auth;
 
 public static class AuthFeature
 {
+    public const string AuthenticationScheme = "CookieAccessToken";
+
     public static IServiceCollection AddAuthFeature(this IServiceCollection services, IConfiguration configuration)
     {
         services
@@ -33,9 +35,9 @@ public static class AuthFeature
         services.AddScoped<GetCurrentUserQueryHandler>();
 
         services
-            .AddAuthentication(AuthSchemes.CookieAccessToken)
+            .AddAuthentication(AuthenticationScheme)
             .AddScheme<AuthenticationSchemeOptions, CookieAccessTokenAuthenticationHandler>(
-                AuthSchemes.CookieAccessToken,
+                AuthenticationScheme,
                 _ => { });
 
         services.AddAuthorization();
