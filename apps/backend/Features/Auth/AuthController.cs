@@ -1,10 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using backend.Features.Auth.Commands.Login;
-using backend.Features.Auth.Commands.Logout;
-using backend.Features.Auth.Commands.Refresh;
-using backend.Features.Auth.Commands.Register;
 using backend.Features.Auth.Http;
-using backend.Features.Auth.Queries.GetCurrentUser;
 using backend.Features.Auth.Services;
 using backend.Shared.Http;
 using Microsoft.AspNetCore.Authorization;
@@ -15,38 +10,36 @@ namespace backend.Features.Auth;
 [ApiController]
 [Route("api/v1/auth")]
 public sealed class AuthController(
-    RegisterCommandHandler register,
-    LoginCommandHandler login,
-    RefreshCommandHandler refresh,
-    LogoutCommandHandler logout,
-    GetCurrentUserQueryHandler getCurrentUser,
+    AuthService auth,
     AuthCookieService authCookies) : ControllerBase
 {
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest request, CancellationToken cancellationToken)
     {
-        var result = await register.Handle(request, cancellationToken);
+        var result = await auth.RegisterAsync(request, cancellationToken);
         return this.ToAuthActionResult(result, authCookies);
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginRequest request, CancellationToken cancellationToken)
     {
-        var result = await login.Handle(request, cancellationToken);
+        var result = await auth.LoginAsync(request, cancellationToken);
         return this.ToAuthActionResult(result, authCookies);
     }
 
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh(CancellationToken cancellationToken)
     {
-        var result = await refresh.Handle(cancellationToken);
+        var refreshToken = authCookies.GetRefreshToken(HttpContext);
+        var result = await auth.RefreshAsync(refreshToken, cancellationToken);
         return this.ToAuthActionResult(result, authCookies);
     }
 
     [HttpPost("logout")]
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
-        var result = await logout.Handle(cancellationToken);
+        var accessToken = authCookies.GetAccessToken(HttpContext);
+        var result = await auth.LogoutAsync(accessToken, cancellationToken);
         if (result.Success)
         {
             authCookies.ClearAuthCookies(HttpContext);
@@ -58,7 +51,12 @@ public sealed class AuthController(
     [HttpGet("me")]
     public async Task<IActionResult> GetCurrentUser(CancellationToken cancellationToken)
     {
-        var result = await getCurrentUser.Handle(cancellationToken);
+        var sessionClaim = User.FindFirst(JwtService.SessionIdClaim)?.Value;
+        var sessionPublicId = Guid.TryParse(sessionClaim, out var parsedSessionId)
+            ? parsedSessionId
+            : (Guid?)null;
+
+        var result = await auth.GetCurrentUserAsync(sessionPublicId, cancellationToken);
         return this.ToActionResult(result);
     }
 }

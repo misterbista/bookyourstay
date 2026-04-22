@@ -1,10 +1,5 @@
-using backend.Features.Auth.Commands.Login;
-using backend.Features.Auth.Commands.Logout;
-using backend.Features.Auth.Commands.Refresh;
-using backend.Features.Auth.Commands.Register;
 using backend.Features.Auth.Options;
 using backend.Features.Auth.Persistence;
-using backend.Features.Auth.Queries.GetCurrentUser;
 using backend.Features.Auth.Security;
 using backend.Features.Auth.Services;
 using Microsoft.AspNetCore.Authentication;
@@ -27,12 +22,8 @@ public static class AuthFeature
         services.AddSingleton<JwtService>();
         services.AddSingleton<PasswordService>();
         services.AddSingleton<AuthCookieService>();
+        services.AddScoped<AuthService>();
         services.AddScoped<AuthSessionService>();
-        services.AddScoped<LoginCommandHandler>();
-        services.AddScoped<LogoutCommandHandler>();
-        services.AddScoped<RefreshCommandHandler>();
-        services.AddScoped<RegisterCommandHandler>();
-        services.AddScoped<GetCurrentUserQueryHandler>();
 
         services
             .AddAuthentication(AuthenticationScheme)
