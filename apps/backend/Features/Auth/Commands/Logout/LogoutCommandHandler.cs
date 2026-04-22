@@ -1,29 +1,25 @@
 using backend.Features.Auth.Persistence;
-using backend.Features.Auth.Security;
-using EzyMediatr.Core.Handlers;
+using backend.Features.Auth.Services;
+using Microsoft.AspNetCore.Http;
 
 namespace backend.Features.Auth.Commands.Logout;
 
-public sealed class LogoutCommandHandler(AuthRepository repository, JwtTokenService jwtTokenService, TimeProvider timeProvider)
-    : IRequestHandler<LogoutRequest, ApplicationResult>
+public sealed class LogoutCommandHandler(
+    AuthRepository repository,
+    JwtService jwtService,
+    AuthCookieService authCookies,
+    IHttpContextAccessor httpContextAccessor)
 {
     public async Task<ApplicationResult> Handle(LogoutRequest request, CancellationToken cancellationToken)
     {
-        if (!jwtTokenService.TryValidateAccessToken(request.Token, out var payload))
+        var httpContext = httpContextAccessor.HttpContext;
+        var accessToken = httpContext is null ? null : authCookies.GetAccessToken(httpContext);
+        if (!string.IsNullOrWhiteSpace(accessToken) &&
+            jwtService.TryValidateAccessToken(accessToken, out var payload))
         {
-            return ApplicationResult.Unauthorized("Logout failed", new Dictionary<string, string[]>
-            {
-                ["authorization"] = ["The provided token is invalid or expired."]
-            });
+            await repository.RevokeSessionAsync(payload.SessionPublicId, cancellationToken);
         }
 
-        var revoked = await repository.RevokeSessionAsync(payload.SessionPublicId, "user_logout", timeProvider.GetUtcNow(), cancellationToken);
-
-        return revoked
-            ? ApplicationResult.Ok("Logout successful")
-            : ApplicationResult.NotFound("Session not found", new Dictionary<string, string[]>
-            {
-                ["session"] = ["The provided session token is invalid or already expired."]
-            });
+        return ApplicationResult.Ok("Logged out successfully");
     }
 }

@@ -1,54 +1,37 @@
 using backend.Features.Auth.Domain;
+using backend.Features.Auth.Contracts;
 using backend.Features.Auth.Persistence;
-using backend.Features.Auth.Security;
-using EzyMediatr.Core.Handlers;
+using backend.Features.Auth.Services;
 using Microsoft.AspNetCore.Identity;
 
 namespace backend.Features.Auth.Commands.Login;
 
 public sealed class LoginCommandHandler(
     AuthRepository repository,
-    IPasswordHasher<AuthIdentity> passwordHasher,
-    JwtTokenService jwtTokenService,
-    TimeProvider timeProvider,
-    IHttpContextAccessor httpContextAccessor)
-    : IRequestHandler<LoginRequest, ApplicationResult<AuthResponse>>
+    PasswordService passwordService,
+    JwtService jwtService,
+    TimeProvider timeProvider)
 {
     public async Task<ApplicationResult<AuthResponse>> Handle(LoginRequest request, CancellationToken cancellationToken)
     {
-        var normalizedEmail = request.Email.Trim().ToLowerInvariant();
-        var authRecord = await repository.GetLocalIdentityByEmailAsync(normalizedEmail, cancellationToken);
-        if (authRecord is null)
+        var user = await repository.GetUserByEmailAsync(request.Email, cancellationToken);
+        if (user is null)
         {
             return InvalidCredentials();
         }
 
-        var user = authRecord.Value.User;
-        var identity = authRecord.Value.Identity;
-
-        if (string.IsNullOrWhiteSpace(identity.PasswordHash))
+        if (passwordService.VerifyPassword(user, request.Password) != PasswordVerificationResult.Success)
         {
             return InvalidCredentials();
         }
 
-        var verification = passwordHasher.VerifyHashedPassword(identity, identity.PasswordHash, request.Password);
-        if (verification == PasswordVerificationResult.Failed)
-        {
-            return InvalidCredentials();
-        }
+        var refreshToken = PasswordService.GenerateRefreshToken();
+        var refreshTokenHash = PasswordService.HashToken(refreshToken);
+        var sessionExpiresAt = timeProvider.GetUtcNow().AddDays(7);
 
-        var now = timeProvider.GetUtcNow();
-        var refreshToken = AuthTokenFactory.CreateRefreshToken();
-        var session = await repository.CreateSessionAsync(
-            user.Id,
-            identity.Id,
-            TokenHasher.Hash(refreshToken),
-            now.Add(AuthDefaults.SessionLifetime),
-            now,
-            httpContextAccessor.HttpContext.GetAuthSessionMetadata(),
-            cancellationToken);
+        var session = await repository.CreateSessionAsync(user.Id, refreshTokenHash, sessionExpiresAt, cancellationToken);
 
-        var accessToken = jwtTokenService.CreateAccessToken(user, session);
+        var accessToken = jwtService.CreateAccessToken(user, session);
         var response = new AuthResponse(accessToken.Token, accessToken.ExpiresAt, refreshToken, session.ExpiresAt, session.PublicId);
 
         return ApplicationResult<AuthResponse>.Ok(response, "Login successful");
@@ -57,6 +40,6 @@ public sealed class LoginCommandHandler(
     private static ApplicationResult<AuthResponse> InvalidCredentials() =>
         ApplicationResult<AuthResponse>.Unauthorized("Login failed", new Dictionary<string, string[]>
         {
-            ["credentials"] = ["Email or password is incorrect."]
+            ["credentials"] = ["Invalid email or password"]
         });
 }

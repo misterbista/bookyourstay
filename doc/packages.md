@@ -1,10 +1,16 @@
 # Packages
 
-This directory is reserved for shared JavaScript or TypeScript packages as the monorepo grows.
+Shared TypeScript packages live under `packages/*` and are consumed by apps through workspace package names.
 
-Examples:
+## Current Packages
 
-- shared API contracts
-- generated API clients
-- design tokens
-- shared lint or TypeScript config
+```text
+packages/shared/
+|-- package.json
+`-- src/
+    |-- constants.ts
+    |-- types.ts
+    `-- utils.ts
+```
+
+Use `@bookyourstay/shared` for cross-app contracts and tiny framework-agnostic utilities. Keep app-specific UI, hooks, API clients, and feature code inside the owning app.

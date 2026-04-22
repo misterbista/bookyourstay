@@ -1,40 +1,44 @@
 using backend.Features.Auth.Persistence;
-using backend.Features.Auth.Security;
-using EzyMediatr.Core.Handlers;
+using backend.Features.Auth.Services;
+using Microsoft.AspNetCore.Http;
 
 namespace backend.Features.Auth.Queries.GetCurrentUser;
 
-public sealed class GetCurrentUserQueryHandler(AuthRepository repository, JwtTokenService jwtTokenService, TimeProvider timeProvider)
-    : IRequestHandler<GetCurrentUserRequest, ApplicationResult<CurrentUserResponse>>
+public sealed class GetCurrentUserQueryHandler(
+    AuthRepository repository,
+    JwtService jwtService,
+    AuthCookieService authCookies,
+    IHttpContextAccessor httpContextAccessor)
 {
     public async Task<ApplicationResult<CurrentUserResponse>> Handle(GetCurrentUserRequest request, CancellationToken cancellationToken)
     {
-        if (!jwtTokenService.TryValidateAccessToken(request.Token, out var payload))
+        var httpContext = httpContextAccessor.HttpContext;
+        var accessToken = httpContext is null ? null : authCookies.GetAccessToken(httpContext);
+        if (string.IsNullOrWhiteSpace(accessToken))
         {
-            return Unauthorized();
+            return ApplicationResult<CurrentUserResponse>.Unauthorized("No access token", new Dictionary<string, string[]> { ["token"] = ["Access token not found in cookies"] });
         }
 
-        var user = await repository.GetActiveUserBySessionAsync(payload.SessionPublicId, timeProvider.GetUtcNow(), cancellationToken);
-        if (user is null || user.Id != payload.UserId || user.PublicId != payload.UserPublicId)
+        if (!jwtService.TryValidateAccessToken(accessToken, out var payload))
         {
-            return Unauthorized();
+            return ApplicationResult<CurrentUserResponse>.Unauthorized("Invalid token", new Dictionary<string, string[]> { ["token"] = ["Invalid access token"] });
         }
 
-        return ApplicationResult<CurrentUserResponse>.Ok(
-            new CurrentUserResponse(
-                user.PublicId,
-                user.FullName,
-                user.Email ?? string.Empty,
-                user.Status,
-                user.EmailVerifiedAt,
-                user.CreatedAt,
-                user.LastLoginAt),
-            "Current user fetched");
+        var user = await repository.GetUserBySessionAsync(payload.SessionPublicId, cancellationToken);
+        if (user is null)
+        {
+            return ApplicationResult<CurrentUserResponse>.Unauthorized("Session expired", new Dictionary<string, string[]> { ["session"] = ["Session has expired"] });
+        }
+
+        var response = new CurrentUserResponse(
+            user.PublicId,
+            user.FullName,
+            user.Email,
+            user.Status,
+            user.EmailVerifiedAt,
+            user.CreatedAt,
+            user.LastLoginAt);
+
+        return ApplicationResult<CurrentUserResponse>.Ok(response, "Current user retrieved");
     }
-
-    private static ApplicationResult<CurrentUserResponse> Unauthorized() =>
-        ApplicationResult<CurrentUserResponse>.Unauthorized("Unauthorized", new Dictionary<string, string[]>
-        {
-            ["authorization"] = ["The provided token is invalid or expired."]
-        });
 }

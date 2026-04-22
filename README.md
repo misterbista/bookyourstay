@@ -1,5 +1,11 @@
 # BookYourStay
 
+Feature-first monorepo:
+
+- `apps/frontend` - Next.js App Router frontend
+- `apps/backend` - ASP.NET Core API
+- `packages/shared` - shared TypeScript contracts and small framework-agnostic utilities
+
 Local development:
 
 ```bash

@@ -1,50 +1,39 @@
 using backend.Features.Auth.Domain;
+using backend.Features.Auth.Contracts;
 using backend.Features.Auth.Persistence;
-using backend.Features.Auth.Security;
-using EzyMediatr.Core.Handlers;
-using Microsoft.AspNetCore.Identity;
+using backend.Features.Auth.Services;
 
 namespace backend.Features.Auth.Commands.Register;
 
 public sealed class RegisterCommandHandler(
     AuthRepository repository,
-    IPasswordHasher<AuthIdentity> passwordHasher,
-    JwtTokenService jwtTokenService,
-    TimeProvider timeProvider,
-    IHttpContextAccessor httpContextAccessor)
-    : IRequestHandler<RegisterRequest, ApplicationResult<AuthResponse>>
+    PasswordService passwordService,
+    JwtService jwtService,
+    TimeProvider timeProvider)
 {
     public async Task<ApplicationResult<AuthResponse>> Handle(RegisterRequest request, CancellationToken cancellationToken)
     {
-        var normalizedEmail = request.Email.Trim().ToLowerInvariant();
-
-        if (await repository.EmailExistsAsync(normalizedEmail, cancellationToken))
+        if (await repository.EmailExistsAsync(request.Email, cancellationToken))
         {
             return ApplicationResult<AuthResponse>.BadRequest("Registration failed", new Dictionary<string, string[]>
             {
-                ["email"] = ["An account with this email already exists."]
+                ["email"] = ["Email already exists"]
             });
         }
 
-        var identity = new AuthIdentity { UserId = 0 };
-        identity.PasswordHash = passwordHasher.HashPassword(identity, request.Password);
+        var user = new User { FullName = request.FullName, Email = request.Email };
+        user.PasswordHash = passwordService.HashPassword(user, request.Password);
 
-        var now = timeProvider.GetUtcNow();
-        var refreshToken = AuthTokenFactory.CreateRefreshToken();
-        var sessionExpiresAt = now.Add(AuthDefaults.SessionLifetime);
-        var registered = await repository.RegisterLocalUserAsync(
-            request.FullName.Trim(),
-            normalizedEmail,
-            identity.PasswordHash,
-            AuthUserStatuses.PendingVerification,
-            TokenHasher.Hash(refreshToken),
-            sessionExpiresAt,
-            now,
-            httpContextAccessor.HttpContext.GetAuthSessionMetadata(),
-            cancellationToken);
+        user = await repository.CreateUserAsync(user.FullName, user.Email, user.PasswordHash, cancellationToken);
 
-        var accessToken = jwtTokenService.CreateAccessToken(registered.User, registered.Session);
-        var response = new AuthResponse(accessToken.Token, accessToken.ExpiresAt, refreshToken, registered.Session.ExpiresAt, registered.Session.PublicId);
+        var refreshToken = PasswordService.GenerateRefreshToken();
+        var refreshTokenHash = PasswordService.HashToken(refreshToken);
+        var sessionExpiresAt = timeProvider.GetUtcNow().AddDays(7);
+
+        var session = await repository.CreateSessionAsync(user.Id, refreshTokenHash, sessionExpiresAt, cancellationToken);
+
+        var accessToken = jwtService.CreateAccessToken(user, session);
+        var response = new AuthResponse(accessToken.Token, accessToken.ExpiresAt, refreshToken, session.ExpiresAt, session.PublicId);
 
         return ApplicationResult<AuthResponse>.Ok(response, "Registration successful");
     }

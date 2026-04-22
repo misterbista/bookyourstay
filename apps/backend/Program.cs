@@ -1,19 +1,17 @@
-using EzyMediatr.DependencyInjection;
-using backend.Features.Auth.Domain;
-using backend.Features.Auth.Persistence;
-using backend.Features.Auth.Security;
+using backend.Features.Auth;
 using backend.Shared.Data.Migrations;
-using Microsoft.AspNetCore.Identity;
+using Dapper;
 using Npgsql;
 using System.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 const string FrontendDevCorsPolicy = "FrontendDev";
 
+DefaultTypeMap.MatchNamesWithUnderscores = true;
+
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
-builder.Services.AddEzyMediatr();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(FrontendDevCorsPolicy, policy =>
@@ -36,16 +34,8 @@ builder.Services.AddDataProtection();
 builder.Services.AddScoped<IDbConnection>(_ => new NpgsqlConnection(
     builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.")));
-builder.Services
-    .AddOptions<JwtOptions>()
-    .Bind(builder.Configuration.GetSection(JwtOptions.SectionName))
-    .ValidateDataAnnotations()
-    .ValidateOnStart();
 builder.Services.AddSingleton(TimeProvider.System);
-builder.Services.AddScoped<AuthRepository>();
-builder.Services.AddSingleton<AuthCookieTokenProtector>();
-builder.Services.AddSingleton<IPasswordHasher<AuthIdentity>, PasswordHasher<AuthIdentity>>();
-builder.Services.AddSingleton<JwtTokenService>();
+builder.Services.AddAuthFeature(builder.Configuration);
 
 var shouldRunMigrations = builder.Configuration.GetValue("Database:RunMigrationsOnStartup", !builder.Environment.IsEnvironment("Testing"));
 if (shouldRunMigrations)

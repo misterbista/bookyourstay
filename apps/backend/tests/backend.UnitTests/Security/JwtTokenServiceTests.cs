@@ -1,6 +1,7 @@
 using System;
 using backend.Features.Auth.Domain;
-using backend.Features.Auth.Security;
+using backend.Features.Auth.Options;
+using backend.Features.Auth.Services;
 using Microsoft.Extensions.Options;
 
 namespace backend.UnitTests.Security;
@@ -19,28 +20,25 @@ public sealed class JwtTokenServiceTests
         });
 
         var timeProvider = TimeProvider.System;
-        var service = new JwtTokenService(jwtOptions, timeProvider);
+        var service = new JwtService(jwtOptions, timeProvider);
 
-        var user = new AuthUser
+        var user = new User
         {
             Id = 42,
             PublicId = Guid.NewGuid(),
             FullName = "Test User",
             Email = "test@example.com",
-            Status = AuthUserStatuses.Active,
-            CreatedAt = timeProvider.GetUtcNow(),
-            UpdatedAt = timeProvider.GetUtcNow()
+            CreatedAt = timeProvider.GetUtcNow()
         };
 
-        var session = new AuthSession
+        var session = new Session
         {
             Id = 7,
             PublicId = Guid.NewGuid(),
             UserId = user.Id,
             RefreshTokenHash = "hash",
             ExpiresAt = timeProvider.GetUtcNow().AddDays(7),
-            CreatedAt = timeProvider.GetUtcNow(),
-            UpdatedAt = timeProvider.GetUtcNow()
+            CreatedAt = timeProvider.GetUtcNow()
         };
 
         var accessToken = service.CreateAccessToken(user, session);

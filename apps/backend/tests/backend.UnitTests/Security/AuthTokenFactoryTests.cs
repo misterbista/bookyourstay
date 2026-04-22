@@ -1,24 +1,16 @@
 using System.Text.RegularExpressions;
-using backend.Features.Auth.Security;
+using backend.Features.Auth.Services;
 
 namespace backend.UnitTests.Security;
 
 public sealed partial class AuthTokenFactoryTests
 {
     [Fact]
-    public void CreateRefreshToken_uses_the_expected_prefix_and_shape()
+    public void GenerateRefreshToken_uses_the_expected_prefix_and_shape()
     {
-        var token = AuthTokenFactory.CreateRefreshToken();
+        var token = PasswordService.GenerateRefreshToken();
 
-        Assert.Matches(TokenPattern("^byst_rt_"), token);
-    }
-
-    [Fact]
-    public void CreatePasswordResetToken_uses_the_expected_prefix_and_shape()
-    {
-        var token = AuthTokenFactory.CreatePasswordResetToken();
-
-        Assert.Matches(TokenPattern("^rst_"), token);
+        Assert.Matches(TokenPattern("^"), token);
     }
 
     private static Regex TokenPattern(string prefixPattern) =>

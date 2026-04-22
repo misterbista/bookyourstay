@@ -2,10 +2,7 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-function Card({
-  className,
-  ...props
-}: React.ComponentProps<"section">) {
+function Card({ className, ...props }: React.ComponentProps<"section">) {
   return (
     <section
       className={cn(
@@ -17,22 +14,13 @@ function Card({
   )
 }
 
-function CardHeader({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <div
-      className={cn("flex flex-col gap-1.5 p-6", className)}
-      {...props}
-    />
+    <div className={cn("flex flex-col gap-1.5 p-6", className)} {...props} />
   )
 }
 
-function CardTitle({
-  className,
-  ...props
-}: React.ComponentProps<"h2">) {
+function CardTitle({ className, ...props }: React.ComponentProps<"h2">) {
   return (
     <h2
       className={cn("text-xl font-semibold tracking-tight", className)}
@@ -41,10 +29,7 @@ function CardTitle({
   )
 }
 
-function CardDescription({
-  className,
-  ...props
-}: React.ComponentProps<"p">) {
+function CardDescription({ className, ...props }: React.ComponentProps<"p">) {
   return (
     <p
       className={cn("text-sm leading-6 text-muted-foreground", className)}
@@ -53,10 +38,7 @@ function CardDescription({
   )
 }
 
-function CardContent({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return <div className={cn("p-6 pt-0", className)} {...props} />
 }
 

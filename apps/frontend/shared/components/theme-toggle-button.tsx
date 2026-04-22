@@ -23,7 +23,7 @@ function ThemeToggleButton({
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
-    () => false,
+    () => false
   )
 
   const isDark = resolvedTheme === "dark"
@@ -33,7 +33,9 @@ function ThemeToggleButton({
       variant={variant}
       size={size}
       className={className}
-      aria-label={mounted && isDark ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label={
+        mounted && isDark ? "Switch to light mode" : "Switch to dark mode"
+      }
       onClick={() => setTheme(isDark ? "light" : "dark")}
     >
       <HugeiconsIcon

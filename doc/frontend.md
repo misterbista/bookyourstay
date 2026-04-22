@@ -36,12 +36,15 @@ bun run typecheck
 apps/frontend/
 |-- app/           # App Router entrypoints
 |-- components/    # UI and shared components
-|-- hooks/         # React hooks
+|-- features/      # Feature-first product code
+|-- shared/        # Frontend-only layout and navigation
 `-- lib/           # Utilities
 ```
 
 ## UI Notes
 
 - Path aliases use `@/*`.
+- Cross-app types and utilities come from `@bookyourstay/shared`.
+- Feature-specific API clients live under the owning feature, not `lib/`.
 - Global styles live in `app/globals.css`.
 - Shared utility helpers live in `lib/utils.ts`.
