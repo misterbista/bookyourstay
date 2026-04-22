@@ -43,7 +43,8 @@ public sealed class RegisterCommandHandler(
             httpContextAccessor.HttpContext.GetAuthSessionMetadata(),
             cancellationToken);
 
-        var response = AuthResponse.From(jwtTokenService, registered.User, registered.Session, refreshToken);
+        var accessToken = jwtTokenService.CreateAccessToken(registered.User, registered.Session);
+        var response = new AuthResponse(accessToken.Token, accessToken.ExpiresAt, refreshToken, registered.Session.ExpiresAt, registered.Session.PublicId);
 
         return ApplicationResult<AuthResponse>.Ok(response, "Registration successful");
     }

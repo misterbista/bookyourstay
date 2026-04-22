@@ -48,7 +48,8 @@ public sealed class LoginCommandHandler(
             httpContextAccessor.HttpContext.GetAuthSessionMetadata(),
             cancellationToken);
 
-        var response = AuthResponse.From(jwtTokenService, user, session, refreshToken);
+        var accessToken = jwtTokenService.CreateAccessToken(user, session);
+        var response = new AuthResponse(accessToken.Token, accessToken.ExpiresAt, refreshToken, session.ExpiresAt, session.PublicId);
 
         return ApplicationResult<AuthResponse>.Ok(response, "Login successful");
     }

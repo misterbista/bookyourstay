@@ -1,5 +1,6 @@
 using backend.Features.Auth.Domain;
 using backend.Features.Auth.Persistence;
+using backend.Features.Auth.Security;
 using EzyMediatr.Core.Handlers;
 using Microsoft.AspNetCore.Identity;
 
@@ -14,7 +15,7 @@ public sealed class ResetPasswordCommandHandler(
     public async Task<ApplicationResult> Handle(ResetPasswordRequest request, CancellationToken cancellationToken)
     {
         var now = timeProvider.GetUtcNow();
-        var tokenHash = Security.TokenHasher.Hash(request.ResetToken);
+        var tokenHash = TokenHasher.Hash(request.ResetToken);
         var resetContext = await repository.GetPasswordResetContextAsync(tokenHash, cancellationToken);
         if (resetContext is null)
         {

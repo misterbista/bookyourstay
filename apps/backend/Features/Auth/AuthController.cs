@@ -84,10 +84,11 @@ public sealed class AuthController(
             return ToActionResult(result);
 
         AppendAuthCookies(result.Data);
+        var data = result.Data;
         return StatusCode(result.StatusCode, new ApiResponse<AuthSessionResponse>(
             true,
             result.Message,
-            AuthSessionResponse.From(result.Data),
+            new AuthSessionResponse(data.AccessTokenExpiresAt, data.RefreshTokenExpiresAt, data.SessionId),
             result.Meta));
     }
 
