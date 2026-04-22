@@ -21,17 +21,20 @@ export function StayCard({ stay }: StayCardProps) {
   const [liked, setLiked] = useState(false)
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl">
+    <div className="group relative overflow-hidden rounded-lg">
       <div className="relative aspect-[3/4] w-full overflow-hidden">
         <Image
           src={stay.image}
           alt={stay.name}
           fill
+          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
           className="object-cover transition-transform duration-500 group-hover:scale-110"
         />
 
         <button
-          onClick={() => setLiked(!liked)}
+          type="button"
+          aria-label={liked ? "Remove from saved stays" : "Save stay"}
+          onClick={() => setLiked((current) => !current)}
           className={cn(
             "absolute top-3 right-3 z-10 flex size-8 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm transition-colors hover:bg-white",
             liked && "bg-primary/10 text-primary hover:bg-primary/20"

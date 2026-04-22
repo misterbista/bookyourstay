@@ -50,8 +50,8 @@ export function AuthWorkspace() {
       <div className="min-h-screen bg-background">
         <SiteNavbar variant="auth" />
         <div className="mx-auto flex min-h-[calc(100vh-72px)] max-w-md items-center justify-center px-4 py-10">
-          <div className="text-center">
-            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+          <div className="text-center" role="status" aria-live="polite">
+            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
             <p className="text-muted-foreground">Loading...</p>
           </div>
         </div>

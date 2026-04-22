@@ -1,5 +1,3 @@
-import type { IconSvgElement } from "@hugeicons/react"
-
 export type Destination = {
   name: string
   tagline: string
@@ -16,12 +14,6 @@ export type Stay = {
   reviews: number
   type: string
   featured?: boolean
-}
-
-export type Category = {
-  name: string
-  icon: IconSvgElement
-  count: number
 }
 
 export type SearchCriteria = {

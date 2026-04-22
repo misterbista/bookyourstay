@@ -78,7 +78,7 @@ kill_stale_processes
 kill_port "$BACKEND_PORT"
 kill_port "$FRONTEND_PORT"
 
-docker compose -f compose.yml up -d --remove-orphans postgres minio minio-init
+docker compose -f compose.yml up -d --remove-orphans postgres
 
 dotnet watch --project apps/backend run --urls "http://localhost:$BACKEND_PORT" &
 backend_pid="$!"

@@ -100,6 +100,31 @@ public sealed class AuthEndpointTests(BackendWebApplicationFactory factory)
         Assert.Contains(setCookieHeaders, header => header.StartsWith("byst_rt=", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public async Task Refresh_rotates_the_cookie_session()
+    {
+        using var client = CreateClient();
+
+        var registerResponse = await RegisterAsync(client, "refresh@example.com");
+        await EnsureSuccessAsync(registerResponse);
+        var oldCookieHeader = CreateCookieHeader(registerResponse);
+
+        using var refreshRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/refresh");
+        refreshRequest.Headers.Add("Cookie", oldCookieHeader);
+        var refreshResponse = await client.SendAsync(refreshRequest);
+
+        await EnsureSuccessAsync(refreshResponse);
+        var setCookieHeaders = refreshResponse.Headers.GetValues("Set-Cookie").ToArray();
+        Assert.Contains(setCookieHeaders, header => header.StartsWith("byst_at=", StringComparison.Ordinal));
+        Assert.Contains(setCookieHeaders, header => header.StartsWith("byst_rt=", StringComparison.Ordinal));
+
+        using var secondRefreshRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/refresh");
+        secondRefreshRequest.Headers.Add("Cookie", oldCookieHeader);
+        var secondRefreshResponse = await client.SendAsync(secondRefreshRequest);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, secondRefreshResponse.StatusCode);
+    }
+
     private HttpClient CreateClient() =>
         factory.CreateClient(new WebApplicationFactoryClientOptions
         {

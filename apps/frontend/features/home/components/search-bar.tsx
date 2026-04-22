@@ -159,8 +159,11 @@ export function SearchBar({ onSearch }: SearchBarProps) {
                     type="button"
                     variant="outline"
                     size="icon-sm"
+                    aria-label="Decrease guests"
                     disabled={guests <= 1}
-                    onClick={() => setGuests(Math.max(1, guests - 1))}
+                    onClick={() =>
+                      setGuests((current) => Math.max(1, current - 1))
+                    }
                   >
                     -
                   </Button>
@@ -171,8 +174,11 @@ export function SearchBar({ onSearch }: SearchBarProps) {
                     type="button"
                     variant="outline"
                     size="icon-sm"
+                    aria-label="Increase guests"
                     disabled={guests >= 16}
-                    onClick={() => setGuests(Math.min(16, guests + 1))}
+                    onClick={() =>
+                      setGuests((current) => Math.min(16, current + 1))
+                    }
                   >
                     +
                   </Button>

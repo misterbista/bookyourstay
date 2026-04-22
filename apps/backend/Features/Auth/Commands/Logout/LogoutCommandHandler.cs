@@ -10,7 +10,7 @@ public sealed class LogoutCommandHandler(
     AuthCookieService authCookies,
     IHttpContextAccessor httpContextAccessor)
 {
-    public async Task<ApplicationResult> Handle(LogoutRequest request, CancellationToken cancellationToken)
+    public async Task<ApplicationResult> Handle(CancellationToken cancellationToken)
     {
         var httpContext = httpContextAccessor.HttpContext;
         var accessToken = httpContext is null ? null : authCookies.GetAccessToken(httpContext);

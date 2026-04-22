@@ -1,37 +1,39 @@
+import Link from "next/link"
 import { Separator } from "@/components/ui/separator"
-import { FOOTER_LINK_GROUPS } from "@/shared/config/navigation"
+import { BrandLogo } from "@/shared/components/brand-logo"
+
+const FOOTER_LINKS = [
+  { name: "Destinations", href: "/#destinations" },
+  { name: "Featured stays", href: "/#stays" },
+  { name: "Sign in", href: "/auth" },
+] as const
 
 function SiteFooter() {
   return (
     <footer className="border-t border-border/50 bg-muted/30">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <div className="flex items-center gap-2 text-lg font-bold">
-              <span className="flex size-7 items-center justify-center rounded-lg bg-primary text-sm text-primary-foreground">
-                B
-              </span>
-              BookYourStay
-            </div>
+        <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
+          <div className="max-w-sm">
+            <BrandLogo className="text-xl" />
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
               Discover and book unique accommodations around the world.
             </p>
           </div>
 
-          {FOOTER_LINK_GROUPS.map((group) => (
-            <div key={group.title}>
-              <h4 className="mb-3 text-sm font-semibold">{group.title}</h4>
-              <ul className="space-y-2">
-                {group.links.map((link) => (
-                  <li key={link}>
-                    <button className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-                      {link}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <nav aria-label="Footer navigation">
+            <ul className="flex flex-wrap gap-x-5 gap-y-3">
+              {FOOTER_LINKS.map((link) => (
+                <li key={link.name}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
         </div>
         <Separator className="my-8" />
         <p className="text-center text-xs text-muted-foreground">

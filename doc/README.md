@@ -10,7 +10,6 @@ BookYourStay is a polyglot monorepo for a booking platform. The repository curre
 |   |-- backend/    # ASP.NET Core API, database migrations, and tests
 |   `-- frontend/   # Next.js app workspace
 |-- doc/            # Repository documentation
-|-- packages/       # Shared JS/TS workspace packages
 |-- compose.yml     # Local infrastructure
 |-- schema.sql      # Product-level schema draft
 `-- package.json    # Root monorepo scripts
@@ -71,7 +70,6 @@ bun run infra:down
 - Database: [database.md](database.md)
 - Backend: [backend.md](backend.md)
 - Frontend: [frontend.md](frontend.md)
-- Packages: [packages.md](packages.md)
 - Architecture: [architecture.md](architecture.md)
 
 ## Product Summary

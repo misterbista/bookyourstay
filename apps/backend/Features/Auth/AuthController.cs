@@ -39,14 +39,14 @@ public sealed class AuthController(
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh(CancellationToken cancellationToken)
     {
-        var result = await refresh.Handle(new RefreshRequest(), cancellationToken);
+        var result = await refresh.Handle(cancellationToken);
         return this.ToAuthActionResult(result, authCookies);
     }
 
     [HttpPost("logout")]
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
-        var result = await logout.Handle(new LogoutRequest(), cancellationToken);
+        var result = await logout.Handle(cancellationToken);
         if (result.Success)
         {
             authCookies.ClearAuthCookies(HttpContext);
@@ -71,7 +71,3 @@ public sealed record RegisterRequest(
 public sealed record LoginRequest(
     [Required, EmailAddress, MaxLength(255)] string Email,
     [Required, MinLength(1)] string Password);
-
-public sealed record RefreshRequest;
-
-public sealed record LogoutRequest;

@@ -66,7 +66,7 @@ app.MapGet("/", () =>
         {
             name = "BookYourStay API",
             version = "v1",
-            architecture = "micro-feature"
+            architecture = "feature-first"
         }))
     .WithTags("Root");
 

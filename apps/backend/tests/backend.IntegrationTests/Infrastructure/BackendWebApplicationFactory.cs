@@ -19,7 +19,8 @@ public sealed class BackendWebApplicationFactory : WebApplicationFactory<Program
             configurationBuilder.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ConnectionStrings:DefaultConnection"] = "Host=localhost;Port=5432;Database=bookyourstay;Username=bookyourstay;Password=bookyourstay",
-                ["Database:RunMigrationsOnStartup"] = "false"
+                ["Database:RunMigrationsOnStartup"] = "false",
+                ["Jwt:SecretKey"] = "bookyourstay-testing-jwt-secret-key-2026"
             });
         });
 

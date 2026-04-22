@@ -1,11 +1,4 @@
-import {
-  Beach02Icon,
-  Building03Icon,
-  Home04Icon,
-  Hotel01Icon,
-  MapsGlobal01Icon,
-} from "@hugeicons/core-free-icons"
-import type { Category, Destination, Stay } from "../types/home"
+import type { Destination, Stay } from "../types/home"
 
 export const DEMO_DESTINATIONS: Destination[] = [
   {
@@ -99,34 +92,6 @@ export const DEMO_FEATURED_STAYS: Stay[] = [
     rating: 4.7,
     reviews: 156,
     type: "Cottage",
-  },
-] as const
-
-export const DEMO_CATEGORIES: Category[] = [
-  {
-    name: "All",
-    icon: MapsGlobal01Icon,
-    count: 12450,
-  },
-  {
-    name: "Beachfront",
-    icon: Beach02Icon,
-    count: 3240,
-  },
-  {
-    name: "City Center",
-    icon: Building03Icon,
-    count: 5680,
-  },
-  {
-    name: "Countryside",
-    icon: Home04Icon,
-    count: 1890,
-  },
-  {
-    name: "Luxury",
-    icon: Hotel01Icon,
-    count: 1640,
   },
 ] as const
 

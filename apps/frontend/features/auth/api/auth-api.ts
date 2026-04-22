@@ -4,9 +4,9 @@ import type {
   LoginPayload,
   RegisterPayload,
 } from "../types/auth"
-import { apiRequest, ApiClientError, getApiBaseUrl } from "@/lib/api-client"
+import { apiRequest, ApiClientError } from "@/lib/api-client"
 
-export { ApiClientError, getApiBaseUrl }
+export { ApiClientError }
 
 const endpoints = {
   register: "/auth/register",

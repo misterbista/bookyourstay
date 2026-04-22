@@ -27,6 +27,6 @@ public sealed class RootEndpointTests(BackendWebApplicationFactory factory)
 
         Assert.Equal("BookYourStay API", root.GetProperty("name").GetString());
         Assert.Equal("v1", root.GetProperty("version").GetString());
-        Assert.Equal("micro-feature", root.GetProperty("architecture").GetString());
+        Assert.Equal("feature-first", root.GetProperty("architecture").GetString());
     }
 }

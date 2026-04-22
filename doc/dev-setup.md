@@ -38,7 +38,6 @@ The repo includes a shared environment template at [`../.env.example`](../.env.e
 Default local values are set for:
 
 - Postgres database name, user, password, and port
-- MinIO root credentials, bucket, and ports
 - `ASPNETCORE_ENVIRONMENT=Development`
 - `APP_PORT=8080`
 - `BACKEND_PORT=8080`
@@ -62,10 +61,10 @@ This runs:
 
 ## Local Infrastructure
 
-Bring up Postgres and MinIO:
+Bring up Postgres:
 
 ```bash
-sh ./dev up
+bun run infra:up
 ```
 
 Useful companion commands:
@@ -102,12 +101,10 @@ Exposed local ports:
 - Frontend: `http://localhost:3000`
 - Backend: `http://localhost:8080`
 - Postgres: `localhost:5432`
-- MinIO API: `http://localhost:9000`
-- MinIO Console: `http://localhost:9001`
 
 Notes:
 
-- Docker is only needed for Postgres and MinIO
+- Docker is only needed for Postgres
 - Bun and .NET must be installed on the host
 - adjust ports or runtime settings in `.env` and app settings as needed
 
@@ -185,7 +182,7 @@ For normal day-to-day development:
 
 ### Port Already In Use
 
-If Postgres, MinIO, backend, or frontend ports are already taken:
+If Postgres, backend, or frontend ports are already taken:
 
 - stop the conflicting process
 - or change the values in `.env`

@@ -7,12 +7,13 @@ interface DestinationCardProps {
 
 export function DestinationCard({ destination }: DestinationCardProps) {
   return (
-    <div className="group relative overflow-hidden rounded-2xl">
-      <div className="aspect-[3/4] w-full overflow-hidden">
+    <div className="group relative overflow-hidden rounded-lg">
+      <div className="relative aspect-[3/4] w-full overflow-hidden">
         <Image
           src={destination.image}
           alt={destination.name}
           fill
+          sizes="(min-width: 1024px) 25vw, 50vw"
           className="object-cover transition-transform duration-500 group-hover:scale-110"
         />
       </div>

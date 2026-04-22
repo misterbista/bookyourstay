@@ -24,9 +24,9 @@
     "format:frontend": "bun run --filter frontend format",
     "start:backend": "dotnet run --project apps/backend",
     "start:frontend": "bun run --filter frontend start",
-    "infra:up": "docker compose -f compose.yml up -d --remove-orphans postgres minio minio-init",
+    "infra:up": "docker compose -f compose.yml up -d --remove-orphans postgres",
     "infra:down": "docker compose -f compose.yml down --remove-orphans",
-    "infra:logs": "docker compose -f compose.yml logs -f postgres minio",
+    "infra:logs": "docker compose -f compose.yml logs -f postgres",
     "infra:ps": "docker compose -f compose.yml ps",
     "check": "bun run build && bun run test:backend && bun run lint:frontend && bun run typecheck:frontend"
   }

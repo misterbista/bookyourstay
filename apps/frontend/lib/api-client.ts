@@ -9,14 +9,6 @@ export type ApiSuccess<T> = {
   meta?: unknown
 }
 
-export type ApiFailure = {
-  success: false
-  message: string
-  errors?: Record<string, string[]>
-}
-
-export type ApiResponse<T> = ApiSuccess<T> | ApiFailure
-
 export class ApiClientError extends Error {
   readonly status: number
   readonly errors: Record<string, string[]>
@@ -33,15 +25,13 @@ export class ApiClientError extends Error {
   }
 }
 
-export function getApiBaseUrl() {
-  return API_BASE_URL
-}
-
 export function flattenErrors(error: {
   message: string
   errors?: Record<string, string[]>
 }) {
-  const details = Object.values(error.errors ?? {}).flat().filter(Boolean)
+  const details = Object.values(error.errors ?? {})
+    .flat()
+    .filter(Boolean)
   return details.length > 0 ? details.join(" ") : error.message
 }
 
@@ -50,14 +40,16 @@ export async function apiRequest<T>(
   init: RequestInit = {}
 ): Promise<ApiSuccess<T>> {
   let response: Response
+  const headers = new Headers(init.headers)
+
+  if (init.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json")
+  }
 
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       ...init,
-      headers: {
-        "Content-Type": "application/json",
-        ...(init.headers ?? {}),
-      },
+      headers,
       credentials: "include",
       cache: "no-store",
     })

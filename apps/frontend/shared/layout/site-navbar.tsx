@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Menu01Icon } from "@hugeicons/core-free-icons"
@@ -10,7 +9,6 @@ import { Menu01Icon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
-import { NAV_LINKS } from "@/shared/config/navigation"
 import { BrandLogo } from "@/shared/components/brand-logo"
 import { ThemeToggleButton } from "@/shared/components/theme-toggle-button"
 
@@ -18,8 +16,12 @@ type SiteNavbarProps = {
   variant?: "home" | "auth"
 }
 
+const HOME_NAV_LINKS = [
+  { name: "Destinations", href: "#destinations" },
+  { name: "Stays", href: "#stays" },
+] as const
+
 function SiteNavbar({ variant = "home" }: SiteNavbarProps) {
-  const router = useRouter()
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -56,23 +58,20 @@ function SiteNavbar({ variant = "home" }: SiteNavbarProps) {
       )}
     >
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <button
-          onClick={() => router.push("/")}
-          className="relative"
-          aria-label="BookYourStay home"
-        >
+        <Link href="/" className="relative" aria-label="BookYourStay home">
           <BrandLogo className="text-2xl" />
-        </button>
+        </Link>
 
         <div className="hidden items-center gap-1 md:flex">
-          {NAV_LINKS.map((link) => (
+          {HOME_NAV_LINKS.map((link) => (
             <Button
               key={link.name}
               variant="ghost"
               size="lg"
               className="text-muted-foreground hover:text-foreground"
+              asChild
             >
-              {link.name}
+              <Link href={link.href}>{link.name}</Link>
             </Button>
           ))}
         </div>
@@ -83,9 +82,9 @@ function SiteNavbar({ variant = "home" }: SiteNavbarProps) {
             variant="default"
             size="lg"
             className="hidden rounded-xl sm:inline-flex"
-            onClick={() => router.push("/auth")}
+            asChild
           >
-            Sign in
+            <Link href="/auth">Sign in</Link>
           </Button>
 
           <Button
@@ -93,6 +92,8 @@ function SiteNavbar({ variant = "home" }: SiteNavbarProps) {
             size="icon"
             className="md:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label="Toggle navigation menu"
+            aria-expanded={mobileOpen}
           >
             <HugeiconsIcon icon={Menu01Icon} size={18} strokeWidth={2} />
           </Button>
@@ -102,24 +103,21 @@ function SiteNavbar({ variant = "home" }: SiteNavbarProps) {
       {mobileOpen && (
         <div className="border-b border-border/50 bg-background/95 px-4 pb-4 backdrop-blur-xl md:hidden">
           <div className="flex flex-col gap-1">
-            {NAV_LINKS.map((link) => (
+            {HOME_NAV_LINKS.map((link) => (
               <Button
                 key={link.name}
                 variant="ghost"
                 size="lg"
                 className="justify-start text-muted-foreground"
+                onClick={() => setMobileOpen(false)}
+                asChild
               >
-                {link.name}
+                <Link href={link.href}>{link.name}</Link>
               </Button>
             ))}
             <Separator className="my-2" />
-            <Button
-              variant="default"
-              size="lg"
-              className="rounded-xl"
-              onClick={() => router.push("/auth")}
-            >
-              Sign in
+            <Button variant="default" size="lg" className="rounded-xl" asChild>
+              <Link href="/auth">Sign in</Link>
             </Button>
           </div>
         </div>

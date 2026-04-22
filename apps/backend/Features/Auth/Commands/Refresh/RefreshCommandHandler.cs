@@ -9,7 +9,7 @@ public sealed class RefreshCommandHandler(
     AuthCookieService authCookies,
     IHttpContextAccessor httpContextAccessor)
 {
-    public async Task<ApplicationResult<AuthResponse>> Handle(RefreshRequest request, CancellationToken cancellationToken)
+    public async Task<ApplicationResult<AuthResponse>> Handle(CancellationToken cancellationToken)
     {
         var httpContext = httpContextAccessor.HttpContext;
         var refreshToken = httpContext is null ? null : authCookies.GetRefreshToken(httpContext);

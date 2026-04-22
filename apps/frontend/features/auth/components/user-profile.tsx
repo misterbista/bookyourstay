@@ -60,41 +60,43 @@ export function UserProfile({
       </div>
 
       <div className="space-y-4">
-        <div className="space-y-3">
+        <dl className="space-y-3">
           <div>
-            <label className="text-sm font-medium">Full Name</label>
-            <p className="text-sm text-muted-foreground">{user.fullName}</p>
+            <dt className="text-sm font-medium">Full Name</dt>
+            <dd className="text-sm text-muted-foreground">{user.fullName}</dd>
           </div>
 
           <div>
-            <label className="text-sm font-medium">Email</label>
-            <p className="text-sm text-muted-foreground">{user.email}</p>
+            <dt className="text-sm font-medium">Email</dt>
+            <dd className="text-sm text-muted-foreground">{user.email}</dd>
           </div>
 
           <div>
-            <label className="text-sm font-medium">Status</label>
-            <Badge
-              variant={user.status === "active" ? "default" : "secondary"}
-              className="mt-1"
-            >
-              {user.status}
-            </Badge>
+            <dt className="text-sm font-medium">Status</dt>
+            <dd>
+              <Badge
+                variant={user.status === "active" ? "default" : "secondary"}
+                className="mt-1"
+              >
+                {user.status}
+              </Badge>
+            </dd>
           </div>
 
           <div>
-            <label className="text-sm font-medium">Account Created</label>
-            <p className="text-sm text-muted-foreground">
+            <dt className="text-sm font-medium">Account Created</dt>
+            <dd className="text-sm text-muted-foreground">
               {formatDate(user.createdAt)}
-            </p>
+            </dd>
           </div>
 
           <div>
-            <label className="text-sm font-medium">Last Login</label>
-            <p className="text-sm text-muted-foreground">
+            <dt className="text-sm font-medium">Last Login</dt>
+            <dd className="text-sm text-muted-foreground">
               {formatDate(user.lastLoginAt)}
-            </p>
+            </dd>
           </div>
-        </div>
+        </dl>
 
         <Separator />
 
