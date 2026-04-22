@@ -10,7 +10,8 @@ public sealed class LoginCommandHandler(
     AuthRepository repository,
     IPasswordHasher<AuthIdentity> passwordHasher,
     JwtTokenService jwtTokenService,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    IHttpContextAccessor httpContextAccessor)
     : IRequestHandler<LoginRequest, ApplicationResult<AuthResponse>>
 {
     public async Task<ApplicationResult<AuthResponse>> Handle(LoginRequest request, CancellationToken cancellationToken)
@@ -44,23 +45,14 @@ public sealed class LoginCommandHandler(
             TokenHasher.Hash(refreshToken),
             now.Add(AuthDefaults.SessionLifetime),
             now,
+            httpContextAccessor.HttpContext.GetAuthSessionMetadata(),
             cancellationToken);
 
-        var accessToken = jwtTokenService.CreateAccessToken(user, session);
-        var response = new AuthResponse(
-            user.PublicId,
-            user.FullName,
-            user.Email ?? string.Empty,
-            accessToken.Token,
-            accessToken.ExpiresAt,
-            refreshToken,
-            session.ExpiresAt,
-            session.PublicId,
-            user.Status,
-            user.EmailVerifiedAt);
+        var response = AuthResponse.From(jwtTokenService, user, session, refreshToken);
 
         return ApplicationResult<AuthResponse>.Ok(response, "Login successful");
     }
+
     private static ApplicationResult<AuthResponse> InvalidCredentials() =>
         ApplicationResult<AuthResponse>.Unauthorized("Login failed", new Dictionary<string, string[]>
         {

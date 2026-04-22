@@ -12,16 +12,9 @@ export type ApiFailure = {
 }
 
 export type AuthSession = {
-  userId: string
-  fullName: string
-  email: string
-  accessToken: string
   accessTokenExpiresAt: string
-  refreshToken: string
   refreshTokenExpiresAt: string
   sessionId: string
-  status: string
-  emailVerifiedAt: string | null
 }
 
 export type CurrentUser = {
@@ -102,8 +95,7 @@ async function parseJson(response: Response) {
 
 async function request<T>(
   path: string,
-  init: RequestInit = {},
-  token?: string
+  init: RequestInit = {}
 ): Promise<ApiSuccess<T>> {
   let response: Response
 
@@ -112,9 +104,9 @@ async function request<T>(
       ...init,
       headers: {
         "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(init.headers ?? {}),
       },
+      credentials: "include",
       cache: "no-store",
     })
   } catch {
@@ -165,18 +157,14 @@ export function login(payload: LoginPayload) {
   })
 }
 
-export function logout(token: string) {
-  return request<null>(
-    "/auth/logout",
-    {
-      method: "POST",
-    },
-    token
-  )
+export function logout() {
+  return request<null>("/auth/logout", {
+    method: "POST",
+  })
 }
 
-export function getCurrentUser(token: string) {
-  return request<CurrentUser>("/auth/me", { method: "GET" }, token)
+export function getCurrentUser() {
+  return request<CurrentUser>("/auth/me", { method: "GET" })
 }
 
 export function forgotPassword(email: string) {

@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import {
   ApiClientError,
-  type AuthSession,
   type CurrentUser,
   type PasswordResetTicket,
   forgotPassword,
@@ -19,7 +18,6 @@ import {
   resetPassword,
 } from "@/lib/auth-api"
 import { cn } from "@/lib/utils"
-import { readStoredSession, persistSession } from "@/features/auth/lib/session-storage"
 import { Navbar } from "@/shared/components/navbar"
 
 type AuthMode = "login" | "register" | "recovery"
@@ -95,7 +93,6 @@ function FeedbackBanner({
 
 function AuthWorkspace() {
   const [mode, setMode] = useState<AuthMode>("login")
-  const [session, setSession] = useState<AuthSession | null>(null)
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
   const [isHydratingSession, setIsHydratingSession] = useState(true)
   const [busyAction, setBusyAction] = useState<string | null>(null)
@@ -117,32 +114,34 @@ function AuthWorkspace() {
   })
 
   useEffect(() => {
+    let isCurrent = true
+
     async function hydrate() {
-      const stored = readStoredSession()
-      if (!stored) {
-        setIsHydratingSession(false)
-        return
-      }
-
-      setSession(stored)
-
       try {
-        const response = await getCurrentUser(stored.accessToken)
+        const response = await getCurrentUser()
+        if (!isCurrent) return
+
         setCurrentUser(response.data)
       } catch {
-        persistSession(null)
-        setSession(null)
+        if (!isCurrent) return
+
         setCurrentUser(null)
       } finally {
-        setIsHydratingSession(false)
+        if (isCurrent) {
+          setIsHydratingSession(false)
+        }
       }
     }
 
     void hydrate()
+
+    return () => {
+      isCurrent = false
+    }
   }, [])
 
-  async function refreshCurrentUser(activeSession: AuthSession) {
-    const response = await getCurrentUser(activeSession.accessToken)
+  async function loadCurrentUser() {
+    const response = await getCurrentUser()
     setCurrentUser(response.data)
   }
 
@@ -152,10 +151,8 @@ function AuthWorkspace() {
     setFeedback(null)
 
     try {
-      const response = await register(registerForm)
-      persistSession(response.data)
-      setSession(response.data)
-      await refreshCurrentUser(response.data)
+      await register(registerForm)
+      await loadCurrentUser()
       setRegisterForm({ fullName: "", email: "", password: "" })
       setFeedback({
         tone: "success",
@@ -185,10 +182,8 @@ function AuthWorkspace() {
     setFeedback(null)
 
     try {
-      const response = await login(loginForm)
-      persistSession(response.data)
-      setSession(response.data)
-      await refreshCurrentUser(response.data)
+      await login(loginForm)
+      await loadCurrentUser()
       setLoginForm({ email: "", password: "" })
       setFeedback({
         tone: "success",
@@ -274,16 +269,14 @@ function AuthWorkspace() {
   }
 
   async function handleLogout() {
-    if (!session) return
+    if (!currentUser) return
 
     setBusyAction("logout")
     setFeedback(null)
 
     try {
-      await logout(session.accessToken)
+      await logout()
     } finally {
-      persistSession(null)
-      setSession(null)
       setCurrentUser(null)
       setBusyAction(null)
       setMode("login")
@@ -310,7 +303,7 @@ function AuthWorkspace() {
                   <div className="h-12 animate-pulse rounded-xl bg-muted/40" />
                 </div>
               </div>
-            ) : session && currentUser ? (
+            ) : currentUser ? (
               <div className="space-y-6">
                 <div>
                   <Badge variant="success" className="mb-3">

@@ -32,11 +32,13 @@ public sealed class AuthRepository(IDbConnection connection)
         string userStatus,
         string refreshTokenHash,
         DateTimeOffset sessionExpiresAt,
+        DateTimeOffset now,
+        AuthSessionMetadata sessionMetadata,
         CancellationToken cancellationToken)
     {
         const string insertUserSql = """
-            INSERT INTO iam.users (full_name, email, status)
-            VALUES (@FullName, @Email, @Status)
+            INSERT INTO iam.users (full_name, email, status, last_login_at, updated_at)
+            VALUES (@FullName, @Email, @Status, @Now, @Now)
             RETURNING
                 id AS "Id",
                 public_id AS "PublicId",
@@ -53,13 +55,29 @@ public sealed class AuthRepository(IDbConnection connection)
             """;
 
         const string insertIdentitySql = """
-            INSERT INTO iam.user_identities (user_id, provider, provider_subject, password_hash, provider_email)
-            VALUES (@UserId, @Provider, @ProviderSubject, @PasswordHash, @ProviderEmail);
+            INSERT INTO iam.user_identities (user_id, provider, provider_subject, password_hash, provider_email, last_used_at)
+            VALUES (@UserId, @Provider, @ProviderSubject, @PasswordHash, @ProviderEmail, @Now);
             """;
 
         const string insertSessionSql = """
-            INSERT INTO iam.user_sessions (user_id, refresh_token_hash, expires_at)
-            VALUES (@UserId, @RefreshTokenHash, @ExpiresAt)
+            INSERT INTO iam.user_sessions (
+                user_id,
+                refresh_token_hash,
+                device_name,
+                ip_address,
+                user_agent,
+                expires_at,
+                last_used_at
+            )
+            VALUES (
+                @UserId,
+                @RefreshTokenHash,
+                @DeviceName,
+                NULLIF(@IpAddress, '')::inet,
+                @UserAgent,
+                @ExpiresAt,
+                @Now
+            )
             RETURNING
                 id AS "Id",
                 public_id AS "PublicId",
@@ -76,67 +94,100 @@ public sealed class AuthRepository(IDbConnection connection)
                 updated_at AS "UpdatedAt";
             """;
 
-        var user = await Connection.QuerySingleAsync<AuthUser>(new CommandDefinition(
-            insertUserSql,
-            new
-            {
-                FullName = fullName,
-                Email = normalizedEmail,
-                Status = userStatus
-            },
-            cancellationToken: cancellationToken));
+        var shouldCloseConnection = Connection.State == ConnectionState.Closed;
+        if (shouldCloseConnection)
+        {
+            Connection.Open();
+        }
 
-        await Connection.ExecuteAsync(new CommandDefinition(
-            insertIdentitySql,
-            new
-            {
-                UserId = user.Id,
-                Provider = AuthIdentityProviders.Local,
-                ProviderSubject = normalizedEmail,
-                PasswordHash = passwordHash,
-                ProviderEmail = normalizedEmail
-            },
-            cancellationToken: cancellationToken));
+        using var transaction = Connection.BeginTransaction();
+        try
+        {
+            var user = await Connection.QuerySingleAsync<AuthUser>(new CommandDefinition(
+                insertUserSql,
+                new
+                {
+                    FullName = fullName,
+                    Email = normalizedEmail,
+                    Status = userStatus,
+                    Now = now
+                },
+                transaction,
+                cancellationToken: cancellationToken));
 
-        var session = await Connection.QuerySingleAsync<AuthSession>(new CommandDefinition(
-            insertSessionSql,
-            new
-            {
-                UserId = user.Id,
-                RefreshTokenHash = refreshTokenHash,
-                ExpiresAt = sessionExpiresAt
-            },
-            cancellationToken: cancellationToken));
+            await Connection.ExecuteAsync(new CommandDefinition(
+                insertIdentitySql,
+                new
+                {
+                    UserId = user.Id,
+                    Provider = AuthIdentityProviders.Local,
+                    ProviderSubject = normalizedEmail,
+                    PasswordHash = passwordHash,
+                    ProviderEmail = normalizedEmail,
+                    Now = now
+                },
+                transaction,
+                cancellationToken: cancellationToken));
 
-        return (user, session);
+            var session = await Connection.QuerySingleAsync<AuthSession>(new CommandDefinition(
+                insertSessionSql,
+                new
+                {
+                    UserId = user.Id,
+                    RefreshTokenHash = refreshTokenHash,
+                    sessionMetadata.DeviceName,
+                    sessionMetadata.IpAddress,
+                    sessionMetadata.UserAgent,
+                    ExpiresAt = sessionExpiresAt,
+                    Now = now
+                },
+                transaction,
+                cancellationToken: cancellationToken));
+
+            transaction.Commit();
+            return (user, session);
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+        finally
+        {
+            if (shouldCloseConnection)
+            {
+                Connection.Close();
+            }
+        }
     }
 
     public async Task<(AuthUser User, AuthIdentity Identity)?> GetLocalIdentityByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
     {
         const string sql = """
             SELECT
-                u.id AS "UserId",
-                u.public_id AS "UserPublicId",
-                u.full_name AS "UserFullName",
-                u.email::text AS "UserEmail",
-                u.phone AS "UserPhone",
-                u.status AS "UserStatus",
-                u.email_verified_at AS "UserEmailVerifiedAt",
-                u.phone_verified_at AS "UserPhoneVerifiedAt",
-                u.created_at AS "UserCreatedAt",
-                u.updated_at AS "UserUpdatedAt",
-                u.last_login_at AS "UserLastLoginAt",
-                u.deleted_at AS "UserDeletedAt",
-                i.id AS "IdentityId",
-                i.user_id AS "IdentityUserId",
-                i.provider AS "IdentityProvider",
-                i.provider_subject AS "IdentityProviderSubject",
-                i.password_hash AS "IdentityPasswordHash",
-                i.provider_email::text AS "IdentityProviderEmail",
-                i.provider_metadata AS "IdentityProviderMetadata",
-                i.verified_at AS "IdentityVerifiedAt",
-                i.last_used_at AS "IdentityLastUsedAt",
-                i.created_at AS "IdentityCreatedAt"
+                u.id AS "Id",
+                u.public_id AS "PublicId",
+                u.full_name AS "FullName",
+                u.email::text AS "Email",
+                u.phone AS "Phone",
+                u.status AS "Status",
+                u.email_verified_at AS "EmailVerifiedAt",
+                u.phone_verified_at AS "PhoneVerifiedAt",
+                u.created_at AS "CreatedAt",
+                u.updated_at AS "UpdatedAt",
+                u.last_login_at AS "LastLoginAt",
+                u.deleted_at AS "DeletedAt",
+                i.id AS "IdentitySplit",
+                i.id AS "Id",
+                i.user_id AS "UserId",
+                i.provider AS "Provider",
+                i.provider_subject AS "ProviderSubject",
+                i.password_hash AS "PasswordHash",
+                i.provider_email::text AS "ProviderEmail",
+                i.provider_metadata::text AS "ProviderMetadata",
+                i.verified_at AS "VerifiedAt",
+                i.last_used_at AS "LastUsedAt",
+                i.created_at AS "CreatedAt"
             FROM iam.users u
             INNER JOIN iam.user_identities i ON i.user_id = u.id
             WHERE u.email = @Email
@@ -145,47 +196,15 @@ public sealed class AuthRepository(IDbConnection connection)
             LIMIT 1;
             """;
 
-        var record = await Connection.QuerySingleOrDefaultAsync<LocalAuthRecord>(new CommandDefinition(
-            sql,
-            new { Email = normalizedEmail, Provider = AuthIdentityProviders.Local },
-            cancellationToken: cancellationToken));
+        var records = await Connection.QueryAsync<AuthUser, AuthIdentity, (AuthUser User, AuthIdentity Identity)>(
+            new CommandDefinition(
+                sql,
+                new { Email = normalizedEmail, Provider = AuthIdentityProviders.Local },
+                cancellationToken: cancellationToken),
+            (user, identity) => (user, identity),
+            splitOn: "IdentitySplit");
 
-        if (record is null)
-        {
-            return null;
-        }
-
-        var user = new AuthUser
-        {
-            Id = record.UserId,
-            PublicId = record.UserPublicId,
-            FullName = record.UserFullName,
-            Email = record.UserEmail,
-            Phone = record.UserPhone,
-            Status = record.UserStatus,
-            EmailVerifiedAt = record.UserEmailVerifiedAt,
-            PhoneVerifiedAt = record.UserPhoneVerifiedAt,
-            CreatedAt = record.UserCreatedAt,
-            UpdatedAt = record.UserUpdatedAt,
-            LastLoginAt = record.UserLastLoginAt,
-            DeletedAt = record.UserDeletedAt
-        };
-
-        var identity = new AuthIdentity
-        {
-            Id = record.IdentityId,
-            UserId = record.IdentityUserId,
-            Provider = record.IdentityProvider,
-            ProviderSubject = record.IdentityProviderSubject,
-            PasswordHash = record.IdentityPasswordHash,
-            ProviderEmail = record.IdentityProviderEmail,
-            ProviderMetadata = record.IdentityProviderMetadata,
-            VerifiedAt = record.IdentityVerifiedAt,
-            LastUsedAt = record.IdentityLastUsedAt,
-            CreatedAt = record.IdentityCreatedAt
-        };
-
-        return (user, identity);
+        return records.SingleOrDefault();
     }
 
     public async Task<AuthSession> CreateSessionAsync(
@@ -194,34 +213,63 @@ public sealed class AuthRepository(IDbConnection connection)
         string refreshTokenHash,
         DateTimeOffset sessionExpiresAt,
         DateTimeOffset now,
+        AuthSessionMetadata sessionMetadata,
         CancellationToken cancellationToken)
     {
         const string sql = """
-            UPDATE iam.users
-            SET last_login_at = @Now,
-                updated_at = @Now
-            WHERE id = @UserId;
-
-            UPDATE iam.user_identities
-            SET last_used_at = @Now
-            WHERE id = @IdentityId;
-
-            INSERT INTO iam.user_sessions (user_id, refresh_token_hash, expires_at, last_used_at)
-            VALUES (@UserId, @RefreshTokenHash, @ExpiresAt, @Now)
-            RETURNING
-                id AS "Id",
-                public_id AS "PublicId",
-                user_id AS "UserId",
-                refresh_token_hash AS "RefreshTokenHash",
-                device_name AS "DeviceName",
-                ip_address::text AS "IpAddress",
-                user_agent AS "UserAgent",
-                last_used_at AS "LastUsedAt",
-                expires_at AS "ExpiresAt",
-                revoked_at AS "RevokedAt",
-                revoke_reason AS "RevokeReason",
-                created_at AS "CreatedAt",
-                updated_at AS "UpdatedAt";
+            WITH updated_user AS (
+                UPDATE iam.users
+                SET last_login_at = @Now,
+                    updated_at = @Now
+                WHERE id = @UserId
+                  AND deleted_at IS NULL
+                RETURNING id
+            ),
+            updated_identity AS (
+                UPDATE iam.user_identities
+                SET last_used_at = @Now
+                WHERE id = @IdentityId
+                  AND user_id = @UserId
+                  AND provider = @Provider
+                RETURNING id
+            ),
+            inserted_session AS (
+                INSERT INTO iam.user_sessions (
+                    user_id,
+                    refresh_token_hash,
+                    device_name,
+                    ip_address,
+                    user_agent,
+                    expires_at,
+                    last_used_at
+                )
+                SELECT
+                    @UserId,
+                    @RefreshTokenHash,
+                    @DeviceName,
+                    NULLIF(@IpAddress, '')::inet,
+                    @UserAgent,
+                    @ExpiresAt,
+                    @Now
+                WHERE EXISTS (SELECT 1 FROM updated_user)
+                  AND EXISTS (SELECT 1 FROM updated_identity)
+                RETURNING
+                    id AS "Id",
+                    public_id AS "PublicId",
+                    user_id AS "UserId",
+                    refresh_token_hash AS "RefreshTokenHash",
+                    device_name AS "DeviceName",
+                    ip_address::text AS "IpAddress",
+                    user_agent AS "UserAgent",
+                    last_used_at AS "LastUsedAt",
+                    expires_at AS "ExpiresAt",
+                    revoked_at AS "RevokedAt",
+                    revoke_reason AS "RevokeReason",
+                    created_at AS "CreatedAt",
+                    updated_at AS "UpdatedAt"
+            )
+            SELECT *
+            FROM inserted_session;
             """;
 
         return await Connection.QuerySingleAsync<AuthSession>(new CommandDefinition(
@@ -229,7 +277,12 @@ public sealed class AuthRepository(IDbConnection connection)
             new
             {
                 UserId = userId,
+                IdentityId = identityId,
+                Provider = AuthIdentityProviders.Local,
                 RefreshTokenHash = refreshTokenHash,
+                sessionMetadata.DeviceName,
+                sessionMetadata.IpAddress,
+                sessionMetadata.UserAgent,
                 ExpiresAt = sessionExpiresAt,
                 Now = now
             },
@@ -314,34 +367,36 @@ public sealed class AuthRepository(IDbConnection connection)
     {
         const string sql = """
             SELECT
-                t.id AS "TicketId",
-                t.user_id AS "TicketUserId",
-                t.token_hash AS "TicketTokenHash",
-                t.expires_at AS "TicketExpiresAt",
-                t.consumed_at AS "TicketConsumedAt",
-                t.created_at AS "TicketCreatedAt",
-                u.id AS "UserId",
-                u.public_id AS "UserPublicId",
-                u.full_name AS "UserFullName",
-                u.email::text AS "UserEmail",
-                u.phone AS "UserPhone",
-                u.status AS "UserStatus",
-                u.email_verified_at AS "UserEmailVerifiedAt",
-                u.phone_verified_at AS "UserPhoneVerifiedAt",
-                u.created_at AS "UserCreatedAt",
-                u.updated_at AS "UserUpdatedAt",
-                u.last_login_at AS "UserLastLoginAt",
-                u.deleted_at AS "UserDeletedAt",
-                i.id AS "IdentityId",
-                i.user_id AS "IdentityUserId",
-                i.provider AS "IdentityProvider",
-                i.provider_subject AS "IdentityProviderSubject",
-                i.password_hash AS "IdentityPasswordHash",
-                i.provider_email::text AS "IdentityProviderEmail",
-                i.provider_metadata AS "IdentityProviderMetadata",
-                i.verified_at AS "IdentityVerifiedAt",
-                i.last_used_at AS "IdentityLastUsedAt",
-                i.created_at AS "IdentityCreatedAt"
+                u.id AS "Id",
+                u.public_id AS "PublicId",
+                u.full_name AS "FullName",
+                u.email::text AS "Email",
+                u.phone AS "Phone",
+                u.status AS "Status",
+                u.email_verified_at AS "EmailVerifiedAt",
+                u.phone_verified_at AS "PhoneVerifiedAt",
+                u.created_at AS "CreatedAt",
+                u.updated_at AS "UpdatedAt",
+                u.last_login_at AS "LastLoginAt",
+                u.deleted_at AS "DeletedAt",
+                i.id AS "IdentitySplit",
+                i.id AS "Id",
+                i.user_id AS "UserId",
+                i.provider AS "Provider",
+                i.provider_subject AS "ProviderSubject",
+                i.password_hash AS "PasswordHash",
+                i.provider_email::text AS "ProviderEmail",
+                i.provider_metadata::text AS "ProviderMetadata",
+                i.verified_at AS "VerifiedAt",
+                i.last_used_at AS "LastUsedAt",
+                i.created_at AS "CreatedAt",
+                t.id AS "TicketSplit",
+                t.id AS "Id",
+                t.user_id AS "UserId",
+                t.token_hash AS "TokenHash",
+                t.expires_at AS "ExpiresAt",
+                t.consumed_at AS "ConsumedAt",
+                t.created_at AS "CreatedAt"
             FROM iam.password_reset_tokens t
             INNER JOIN iam.users u ON u.id = t.user_id
             INNER JOIN iam.user_identities i ON i.user_id = u.id
@@ -350,56 +405,15 @@ public sealed class AuthRepository(IDbConnection connection)
             LIMIT 1;
             """;
 
-        var record = await Connection.QuerySingleOrDefaultAsync<PasswordResetContextRecord>(new CommandDefinition(
-            sql,
-            new { TokenHash = tokenHash, Provider = AuthIdentityProviders.Local },
-            cancellationToken: cancellationToken));
-        if (record is null)
-        {
-            return null;
-        }
+        var records = await Connection.QueryAsync<AuthUser, AuthIdentity, PasswordResetTicket, PasswordResetContext>(
+            new CommandDefinition(
+                sql,
+                new { TokenHash = tokenHash, Provider = AuthIdentityProviders.Local },
+                cancellationToken: cancellationToken),
+            (user, identity, ticket) => new PasswordResetContext(user, identity, ticket),
+            splitOn: "IdentitySplit,TicketSplit");
 
-        var ticket = new PasswordResetTicket
-        {
-            Id = record.TicketId,
-            UserId = record.TicketUserId,
-            TokenHash = record.TicketTokenHash,
-            ExpiresAt = record.TicketExpiresAt,
-            ConsumedAt = record.TicketConsumedAt,
-            CreatedAt = record.TicketCreatedAt
-        };
-
-        var user = new AuthUser
-        {
-            Id = record.UserId,
-            PublicId = record.UserPublicId,
-            FullName = record.UserFullName,
-            Email = record.UserEmail,
-            Phone = record.UserPhone,
-            Status = record.UserStatus,
-            EmailVerifiedAt = record.UserEmailVerifiedAt,
-            PhoneVerifiedAt = record.UserPhoneVerifiedAt,
-            CreatedAt = record.UserCreatedAt,
-            UpdatedAt = record.UserUpdatedAt,
-            LastLoginAt = record.UserLastLoginAt,
-            DeletedAt = record.UserDeletedAt
-        };
-
-        var identity = new AuthIdentity
-        {
-            Id = record.IdentityId,
-            UserId = record.IdentityUserId,
-            Provider = record.IdentityProvider,
-            ProviderSubject = record.IdentityProviderSubject,
-            PasswordHash = record.IdentityPasswordHash,
-            ProviderEmail = record.IdentityProviderEmail,
-            ProviderMetadata = record.IdentityProviderMetadata,
-            VerifiedAt = record.IdentityVerifiedAt,
-            LastUsedAt = record.IdentityLastUsedAt,
-            CreatedAt = record.IdentityCreatedAt
-        };
-
-        return new PasswordResetContext(user, identity, ticket);
+        return records.SingleOrDefault();
     }
 
     public async Task<bool> UpdatePasswordAndConsumeResetTokenAsync(
@@ -415,6 +429,7 @@ public sealed class AuthRepository(IDbConnection connection)
                 UPDATE iam.password_reset_tokens
                 SET consumed_at = @Now
                 WHERE token_hash = @TokenHash
+                  AND user_id = @UserId
                   AND consumed_at IS NULL
                 RETURNING user_id
             ),
@@ -430,6 +445,8 @@ public sealed class AuthRepository(IDbConnection connection)
                 SET password_hash = @PasswordHash,
                     last_used_at = @Now
                 WHERE id = @IdentityId
+                  AND user_id = @UserId
+                  AND provider = @Provider
                   AND EXISTS (SELECT 1 FROM consumed_token)
                 RETURNING id
             )
@@ -440,65 +457,15 @@ public sealed class AuthRepository(IDbConnection connection)
 
         return await Connection.ExecuteScalarAsync<bool>(new CommandDefinition(
             sql,
-            new { UserId = userId, IdentityId = identityId, PasswordHash = passwordHash, TokenHash = tokenHash, Now = now },
+            new
+            {
+                UserId = userId,
+                IdentityId = identityId,
+                Provider = AuthIdentityProviders.Local,
+                PasswordHash = passwordHash,
+                TokenHash = tokenHash,
+                Now = now
+            },
             cancellationToken: cancellationToken));
-    }
-
-    private sealed class LocalAuthRecord
-    {
-        public long UserId { get; init; }
-        public Guid UserPublicId { get; init; }
-        public string UserFullName { get; init; } = string.Empty;
-        public string? UserEmail { get; init; }
-        public string? UserPhone { get; init; }
-        public string UserStatus { get; init; } = string.Empty;
-        public DateTimeOffset? UserEmailVerifiedAt { get; init; }
-        public DateTimeOffset? UserPhoneVerifiedAt { get; init; }
-        public DateTimeOffset UserCreatedAt { get; init; }
-        public DateTimeOffset UserUpdatedAt { get; init; }
-        public DateTimeOffset? UserLastLoginAt { get; init; }
-        public DateTimeOffset? UserDeletedAt { get; init; }
-        public long IdentityId { get; init; }
-        public long IdentityUserId { get; init; }
-        public string IdentityProvider { get; init; } = string.Empty;
-        public string IdentityProviderSubject { get; init; } = string.Empty;
-        public string? IdentityPasswordHash { get; init; }
-        public string? IdentityProviderEmail { get; init; }
-        public string? IdentityProviderMetadata { get; init; }
-        public DateTimeOffset? IdentityVerifiedAt { get; init; }
-        public DateTimeOffset? IdentityLastUsedAt { get; init; }
-        public DateTimeOffset IdentityCreatedAt { get; init; }
-    }
-
-    private sealed class PasswordResetContextRecord
-    {
-        public long TicketId { get; init; }
-        public long TicketUserId { get; init; }
-        public string TicketTokenHash { get; init; } = string.Empty;
-        public DateTimeOffset TicketExpiresAt { get; init; }
-        public DateTimeOffset? TicketConsumedAt { get; init; }
-        public DateTimeOffset TicketCreatedAt { get; init; }
-        public long UserId { get; init; }
-        public Guid UserPublicId { get; init; }
-        public string UserFullName { get; init; } = string.Empty;
-        public string? UserEmail { get; init; }
-        public string? UserPhone { get; init; }
-        public string UserStatus { get; init; } = string.Empty;
-        public DateTimeOffset? UserEmailVerifiedAt { get; init; }
-        public DateTimeOffset? UserPhoneVerifiedAt { get; init; }
-        public DateTimeOffset UserCreatedAt { get; init; }
-        public DateTimeOffset UserUpdatedAt { get; init; }
-        public DateTimeOffset? UserLastLoginAt { get; init; }
-        public DateTimeOffset? UserDeletedAt { get; init; }
-        public long IdentityId { get; init; }
-        public long IdentityUserId { get; init; }
-        public string IdentityProvider { get; init; } = string.Empty;
-        public string IdentityProviderSubject { get; init; } = string.Empty;
-        public string? IdentityPasswordHash { get; init; }
-        public string? IdentityProviderEmail { get; init; }
-        public string? IdentityProviderMetadata { get; init; }
-        public DateTimeOffset? IdentityVerifiedAt { get; init; }
-        public DateTimeOffset? IdentityLastUsedAt { get; init; }
-        public DateTimeOffset IdentityCreatedAt { get; init; }
     }
 }

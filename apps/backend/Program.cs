@@ -27,10 +27,12 @@ builder.Services.AddCors(options =>
                 return uri.Host is "localhost" or "127.0.0.1";
             })
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddDataProtection();
 builder.Services.AddScoped<IDbConnection>(_ => new NpgsqlConnection(
     builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.")));
@@ -41,6 +43,7 @@ builder.Services
     .ValidateOnStart();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<AuthRepository>();
+builder.Services.AddSingleton<AuthCookieTokenProtector>();
 builder.Services.AddSingleton<IPasswordHasher<AuthIdentity>, PasswordHasher<AuthIdentity>>();
 builder.Services.AddSingleton<JwtTokenService>();
 
